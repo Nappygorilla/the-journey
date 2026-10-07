@@ -65,3 +65,6 @@ Open **More → Run feature audit**. The audit screen is generated from the same
 > Scripture. Prayer. Learning. Growth. Your Journey with God.
 
 Everything is designed around a free-first experience with no subscription gate in this frontend build.
+
+
+<!-- CI visual verification branch -->
