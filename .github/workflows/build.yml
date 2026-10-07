@@ -22,3 +22,9 @@ jobs:
         run: npm run audit:features
       - name: Build
         run: npm run build
+      - name: Install browser smoke-test dependency
+        run: npm install --no-save playwright
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Browser smoke test
+        run: node scripts/runtime-smoke.mjs
