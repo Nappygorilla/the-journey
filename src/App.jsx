@@ -284,11 +284,21 @@ function AuthScreen({mode,setMode,error,setError,onSuccess}) {
 
   const submit = (e) => {
     e.preventDefault();
+    const normalizedEmail = email.trim().toLowerCase();
+    const existing = safeParse("journey_account", null);
     if (mode === "register" && !name.trim()) return setError("Please enter your name.");
-    if (!email.includes("@")) return setError("Enter a valid email address.");
+    if (!normalizedEmail.includes("@")) return setError("Enter a valid email address.");
     if (password.length < 6) return setError("Use at least 6 characters for your password.");
-    const next = { name: name.trim() || email.split("@")[0], email };
-    localStorage.setItem("journey_account", JSON.stringify({email,password,name:next.name}));
+    if (mode === "login") {
+      if (!existing || existing.email !== normalizedEmail || existing.password !== password) {
+        return setError("Those login details don't match this local account.");
+      }
+      onSuccess({name: existing.name, email: existing.email});
+      return;
+    }
+    if (existing && existing.email === normalizedEmail) return setError("An account already exists on this device. Sign in instead.");
+    const next = { name: name.trim() || normalizedEmail.split("@")[0], email: normalizedEmail };
+    localStorage.setItem("journey_account", JSON.stringify({...next,password}));
     onSuccess(next);
   };
 
