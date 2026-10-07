@@ -377,36 +377,85 @@ function Stat({label,value,icon}) { return <div className="stat-card"><span clas
 function FeatureCard({icon,title,text,onClick}) { return <button className="feature-card" onClick={onClick}><span className="feature-icon">{icon}</span><span><strong>{title}</strong><small>{text}</small></span><b>→</b></button> }
 
 function BibleView({search,savedVerses,setSavedVerses,notes,setNotes,notify}) {
+  const books = [
+    ["Genesis","GEN",50],["Exodus","EXO",40],["Leviticus","LEV",27],["Numbers","NUM",36],["Deuteronomy","DEU",34],
+    ["Joshua","JOS",24],["Judges","JDG",21],["Ruth","RUT",4],["1 Samuel","1SA",31],["2 Samuel","2SA",24],
+    ["1 Kings","1KI",22],["2 Kings","2KI",25],["1 Chronicles","1CH",29],["2 Chronicles","2CH",36],
+    ["Ezra","EZR",10],["Nehemiah","NEH",13],["Esther","EST",10],["Job","JOB",42],["Psalms","PSA",150],
+    ["Proverbs","PRO",31],["Ecclesiastes","ECC",12],["Song of Solomon","SNG",8],["Isaiah","ISA",66],
+    ["Jeremiah","JER",52],["Lamentations","LAM",5],["Ezekiel","EZK",48],["Daniel","DAN",12],["Hosea","HOS",14],
+    ["Joel","JOL",3],["Amos","AMO",9],["Obadiah","OBA",1],["Jonah","JON",4],["Micah","MIC",7],
+    ["Nahum","NAM",3],["Habakkuk","HAB",3],["Zephaniah","ZEP",3],["Haggai","HAG",2],["Zechariah","ZEC",14],
+    ["Malachi","MAL",4],["Matthew","MAT",28],["Mark","MRK",16],["Luke","LUK",24],["John","JHN",21],
+    ["Acts","ACT",28],["Romans","ROM",16],["1 Corinthians","1CO",16],["2 Corinthians","2CO",13],
+    ["Galatians","GAL",6],["Ephesians","EPH",6],["Philippians","PHP",4],["Colossians","COL",4],
+    ["1 Thessalonians","1TH",5],["2 Thessalonians","2TH",3],["1 Timothy","1TI",6],["2 Timothy","2TI",4],
+    ["Titus","TIT",3],["Philemon","PHM",1],["Hebrews","HEB",13],["James","JAS",5],["1 Peter","1PE",5],
+    ["2 Peter","2PE",3],["1 John","1JN",5],["2 John","2JN",1],["3 John","3JN",1],["Jude","JUD",1],["Revelation","REV",22]
+  ];
   const [book,setBook] = useState("Psalms");
   const [chapter,setChapter] = useState("23");
+  const [passage,setPassage] = useState([
+    {verse:1,text:"The LORD is my shepherd; I shall not want."},
+    {verse:2,text:"He maketh me to lie down in green pastures: he leadeth me beside the still waters."},
+    {verse:3,text:"He restoreth my soul: he leadeth me in the paths of righteousness for his name's sake."},
+    {verse:4,text:"Yea, though I walk through the valley of the shadow of death, I will fear no evil: for thou art with me."},
+    {verse:5,text:"Thou preparest a table before me in the presence of mine enemies."},
+    {verse:6,text:"Surely goodness and mercy shall follow me all the days of my life."}
+  ]);
+  const [loading,setLoading] = useState(false);
+  const [query,setQuery] = useState(search || "");
   const [note,setNote] = useState("");
-  const results = verses.filter(v => !search || (v.text+" "+v.ref+" "+v.topics.join(" ")).toLowerCase().includes(search.toLowerCase()));
+  const selected = books.find(b=>b[0]===book) || books[18];
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`https://bible-api.com/data/kjv/${selected[1]}/${chapter}`);
+        if (!response.ok) throw new Error("Bible API request failed");
+        const data = await response.json();
+        const next = Array.isArray(data.verses) ? data.verses.map(v=>({verse:v.verse,text:v.text.trim()})) : [];
+        if (!cancelled && next.length) setPassage(next);
+      } catch {
+        if (!cancelled) notify("Bible connection unavailable","Showing your last available passage. Try again in a moment.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [book,chapter]);
+
+  useEffect(()=>{ if(search) setQuery(search); },[search]);
+
+  const filtered = passage.filter(v => !query || v.text.toLowerCase().includes(query.toLowerCase()));
   return <div className="page">
-    <PageTitle eyebrow="SCRIPTURE" title="The Bible" text="Read, search, compare, save, highlight, and study Scripture in one place." action={<button className="primary-btn" onClick={()=>notify("Audio Bible","Audio controls can be connected to an approved Scripture audio source.")}>▶ Listen</button>}/>
-    <div className="bible-toolbar"><select value={book} onChange={e=>setBook(e.target.value)}><option>Genesis</option><option>Matthew</option><option>John</option><option>Psalms</option><option>Romans</option><option>Philippians</option></select><select value={chapter} onChange={e=>setChapter(e.target.value)}>{Array.from({length:30},(_,i)=><option key={i+1}>{i+1}</option>)}</select><div className="translation"><span>KJV</span><span className="muted">Public-domain starter translation</span></div></div>
+    <PageTitle eyebrow="SCRIPTURE" title="The Bible" text="Read and search Scripture by book and chapter. The reader uses the public-domain KJV as the first live translation." action={<button className="primary-btn" onClick={()=>notify("Audio Bible","Audio controls are ready to connect to an approved Scripture audio source.")}>▶ Listen</button>}/>
+    <div className="bible-toolbar">
+      <select value={book} onChange={e=>{setBook(e.target.value);setChapter("1")}}>{books.map(b=><option key={b[0]}>{b[0]}</option>)}</select>
+      <select value={chapter} onChange={e=>setChapter(e.target.value)}>{Array.from({length:selected[2]},(_,i)=><option key={i+1}>{i+1}</option>)}</select>
+      <div className="translation"><span>KJV</span><span className="muted">Live Scripture source</span></div>
+    </div>
     <div className="bible-layout">
       <div className="scripture-panel">
         <div className="panel-kicker">{book} {chapter}</div>
-        <h2>The Lord is my shepherd</h2>
+        <h2>{book} {chapter}</h2>
         <div className="scripture-lines">
-          <p><sup>1</sup> The LORD is my shepherd; I shall not want.</p>
-          <p><sup>2</sup> He maketh me to lie down in green pastures: he leadeth me beside the still waters.</p>
-          <p><sup>3</sup> He restoreth my soul: he leadeth me in the paths of righteousness for his name's sake.</p>
-          <p><sup>4</sup> Yea, though I walk through the valley of the shadow of death, I will fear no evil: for thou art with me.</p>
-          <p><sup>5</sup> Thou preparest a table before me in the presence of mine enemies.</p>
-          <p><sup>6</sup> Surely goodness and mercy shall follow me all the days of my life.</p>
+          {loading ? <p className="loading-line">Loading Scripture…</p> : filtered.map(v=><p key={v.verse} className={query?"search-hit":""}><sup>{v.verse}</sup> {v.text}</p>)}
+          {!loading && filtered.length===0 && <div className="empty-state">No verses in this chapter match your search.</div>}
         </div>
-        <div className="scripture-tools"><button onClick={()=>notify("Highlight ready","Verse highlighting is saved locally in this version.")}>🖍 Highlight</button><button onClick={()=>setNotes(prev=>[...prev,{id:Date.now(),ref:"Psalm 23",text:"New Bible note"}])}>✎ Note</button><button onClick={()=>notify("Cross-references","Related passages loaded for this chapter.")}>↗ Cross-references</button><button onClick={()=>notify("Study mode","Opening deeper study resources.")}>▦ Study</button></div>
+        <div className="scripture-tools"><button onClick={()=>notify("Highlight ready","Highlighting is saved locally in this version.")}>🖍 Highlight</button><button onClick={()=>setNotes(prev=>[{id:Date.now(),ref:`${book} ${chapter}`,text:"New Bible note"},...prev])}>✎ Note</button><button onClick={()=>notify("Cross-references","Related passages can be opened from the study view.")}>↗ Cross-references</button><button onClick={()=>notify("Study mode","Opening deeper study resources.")}>▦ Study</button></div>
       </div>
       <div className="study-side">
-        <div className="side-card"><div className="side-card-head"><strong>Search results</strong><span>{results.length}</span></div>{results.map(v=><button key={v.ref} className="result-row" onClick={()=>notify(v.ref,"Jumped to this saved Scripture result.")}><span>{v.ref}</span><small>{v.text}</small></button>)}</div>
+        <div className="side-card"><div className="side-card-head"><strong>Search this chapter</strong><span>{filtered.length}</span></div><div className="compact-search"><span>⌕</span><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search verses..." /></div>{query && <div className="muted" style={{marginTop:8}}>Showing matching verses.</div>}</div>
         <div className="side-card"><div className="side-card-head"><strong>Saved Scripture</strong><span>{savedVerses.length}</span></div>{savedVerses.length===0?<div className="empty-state">Save verses as you study them.</div>:savedVerses.slice(0,4).map(v=><div className="saved-row" key={v.ref}><strong>{v.ref}</strong><button onClick={()=>setSavedVerses(prev=>prev.filter(x=>x.ref!==v.ref))}>×</button><small>{v.text}</small></div>)}</div>
-        <div className="side-card"><div className="side-card-head"><strong>Your notes</strong><span>{notes.length}</span></div>{notes.slice(0,3).map(n=><div className="saved-row" key={n.id}><strong>{n.ref}</strong><small>{n.text}</small></div>)}<input className="compact-input" value={note} onChange={e=>setNote(e.target.value)} placeholder="Write a quick note..." onKeyDown={e=>{if(e.key==="Enter"&&note.trim()){setNotes(prev=>[{id:Date.now(),ref:"Personal",text:note.trim()},...prev]);setNote("")}}}/></div>
+        <div className="side-card"><div className="side-card-head"><strong>Your notes</strong><span>{notes.length}</span></div>{notes.slice(0,3).map(n=><div className="saved-row" key={n.id}><strong>{n.ref}</strong><small>{n.text}</small></div>)}<input className="compact-input" value={note} onChange={e=>setNote(e.target.value)} placeholder="Write a quick note..." onKeyDown={e=>{if(e.key==="Enter"&&note.trim()){setNotes(prev=>[{id:Date.now(),ref:`${book} ${chapter}`,text:note.trim()},...prev]);setNote("")}}}/></div>
       </div>
     </div>
   </div>
 }
-
 function StudyView({setView}) {
   const topics = ["Faith","Anxiety","Forgiveness","Prayer","Purpose","Temptation","Relationships","Wisdom"];
   return <div className="page"><PageTitle eyebrow="DEEPER" title="Bible Study" text="Go beyond reading. Explore the context, connections, and meaning around Scripture."/>
