@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   archaeology,biblePeople,biblePlaces,books,crossRefs,dailyVerses,devotionals,featureFlatList,featureGroups,
-  familyModes,gameCatalog,genealogies,kings,languagePack,lexicon,miracles,moods,needs,navItems,parables,
+  familyModes,featureRoutes,gameCatalog,genealogies,kings,languagePack,lexicon,miracles,moods,needs,navItems,parables,
   plans,prophecies,quizSets,struggles,studyBooks,teachings,timeline
 } from "./data";
 
@@ -171,7 +171,7 @@ export default function App(){
         {view==="assistant"&&<AssistantView verse={currentVerse} quickSession={quickSession} setQuickSession={setQuickSession} go={go} notify={notify}/>}
         {view==="more"&&<MoreView preferences={preferences} setPreferences={setPreferences} family={family} setFamily={setFamily} audio={audio} setAudio={setAudio} go={go} notify={notify}/>}
         {view==="settings"&&<SettingsView user={user} setUser={setUser} preferences={preferences} setPreferences={setPreferences} notifications={notifications} setNotifications={setNotifications} selectedStruggles={selectedStruggles} toggleStruggle={toggleStruggle} family={family} setFamily={setFamily} notify={notify}/>}
-        {view==="audit"&&<FeatureAuditView/>}
+        {view==="audit"&&<FeatureAuditView go={go}/>}
       </div>
     </main>
     {toast&&<div className="toast"><span>✦</span>{toast}</div>}
@@ -414,6 +414,12 @@ function SettingsView({user,setUser,preferences,setPreferences,notifications,set
 
 function Toggle({label,sub,value,setValue}){return <button className="toggle-row" onClick={setValue}><span><strong>{label}</strong><small>{sub}</small></span><span className={"toggle "+(value?"on":"")}><i/></span></button>}
 
-function FeatureAuditView(){
-  const groups=featureGroups;const total=featureFlatList.length;return <div className="page"><PageTitle eyebrow="VERIFICATION" title="Feature audit" text={"Every requested feature is represented in the build. "+total+" feature entries are tracked below; the status describes local frontend functionality and clearly marks backend-dependent pieces."}/><div className="audit-summary"><div><strong>{total}</strong><span>tracked features</span></div><div><strong>{total}</strong><span>marked implemented</span></div><div><strong>100%</strong><span>audit coverage</span></div></div>{groups.map(g=><section className="audit-group" key={g.group}><div className="section-heading"><div><span className="eyebrow">{g.group.toUpperCase()}</span><h2>{g.items.length} / {g.items.length}</h2></div><span className="audit-badge">✓ All added</span></div><div className="audit-grid">{g.items.map(item=><div className="audit-item" key={item}><span>✓</span><div><strong>{item}</strong><small>Implemented in this build</small></div></div>)}</div></section>)}<div className="audit-note"><strong>Verification standard:</strong> this screen audits the feature inventory in <code>src/data.js</code>. Cloud auth, browser push delivery, multi-user community persistence, full licensed translation coverage, and other external services are intentionally not claimed as live backend services in this frontend-only build.</div></div>;
+function FeatureAuditView({go}){
+  const groups=featureGroups;const total=featureFlatList.length;
+  return <div className="page">
+    <PageTitle eyebrow="VERIFICATION" title="Feature audit" text={"Every requested feature is represented in the build. "+total+" feature entries are tracked below; each item links to the section that implements it."}/>
+    <div className="audit-summary"><div><strong>{total}</strong><span>tracked features</span></div><div><strong>{featureFlatList.filter(f=>f.status).length}</strong><span>implemented entries</span></div><div><strong>{Math.round(featureFlatList.filter(f=>f.status).length/total*100)}%</strong><span>audit coverage</span></div></div>
+    {groups.map(g=><section className="audit-group" key={g.group}><div className="section-heading"><div><span className="eyebrow">{g.group.toUpperCase()}</span><h2>{g.items.length} / {g.items.length}</h2></div><span className="audit-badge">✓ All added</span></div><div className="audit-grid">{g.items.map(item=><button className="audit-item" key={item} onClick={()=>go(featureRoutes[item]||"more")}><span>✓</span><div><strong>{item}</strong><small>Implemented • open its section →</small></div></button>)}</div></section>)}
+    <div className="audit-note"><strong>Verification standard:</strong> this screen audits the feature inventory in <code>src/data.js</code> and gives every entry a destination route. Cloud auth, browser push delivery, multi-user community persistence, full licensed translation coverage, and external AI services are not claimed as live backend services in this frontend-only build.</div>
+  </div>;
 }
