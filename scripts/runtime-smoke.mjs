@@ -24,7 +24,7 @@ try{
   const errors=[];
   page.on("pageerror",error=>errors.push(error.message));
   page.on("console",msg=>{if(msg.type()==="error")errors.push(msg.text());});
-  await page.goto("http://127.0.0.1:"+port+"/", {waitUntil:"networkidle"});
+  await page.goto("http://127.0.0.1:"+port+"/", {waitUntil:"domcontentloaded"});
   await page.waitForTimeout(1200);
   const bodyText=await page.locator("body").innerText();
   const rootHtml=await page.locator("#root").innerHTML();
