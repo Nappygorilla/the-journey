@@ -73,4 +73,9 @@ export const featureGroups=[
 {group:"Product / UX",items:["Premium dark interface","Animations","Responsive mobile navigation","Local persistence","Feature audit screen","Free-first positioning"]}
 ];
 export const featureFlatList=featureGroups.flatMap(g=>g.items.map(item=>({group:g.group,item,status:"Implemented in this build"})));
+export const featureRoutes=Object.fromEntries(featureFlatList.map(f=>[f.item,{
+  "Spiritual growth":"growth","Bible study":"study","Study Assistant":"assistant","Games":"games","Streaks / challenges":"journey",
+  "Prayer":"prayer","Community":"community","Notifications":"home","Journey system":"journey","Audio":"more","Languages":"more",
+  "Family mode":"more","Defining feature":"assistant","Product / UX":"more"
+}[f.group]||"more"]));
 export const familyModes=["Parent / Guardian","Teen / Youth","Child-safe"];
