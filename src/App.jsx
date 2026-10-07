@@ -86,6 +86,7 @@ export default function App() {
   const [completed, setCompleted] = useState(() => safeParse("journey_completed", { verse:false, prayer:false, reading:false, game:false }));
   const [showNotifications, setShowNotifications] = useState(false);
   const [showAuth, setShowAuth] = useState(!user);
+  const [onboarding, setOnboarding] = useState(() => Boolean(user && !localStorage.getItem("journey_onboarded")));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [toast, setToast] = useState("");
 
@@ -147,9 +148,23 @@ export default function App() {
           setUser(nextUser);
           setShowAuth(false);
           notify("Welcome to The Journey", "Your personal faith dashboard is ready.");
+          setOnboarding(true);
         }}
       />
     );
+  }
+
+  if (onboarding) {
+    return <OnboardingScreen
+      name={user.name}
+      selectedStruggles={selectedStruggles}
+      toggleStruggle={toggleStruggle}
+      onComplete={() => {
+        localStorage.setItem("journey_onboarded", "1");
+        setOnboarding(false);
+        notify("Your Journey is personalized", "Your Daily Verse now reflects what you chose.");
+      }}
+    />;
   }
 
   return (
@@ -220,6 +235,43 @@ export default function App() {
         </div>
       </main>
       {toast && <div className="toast"><span>✦</span>{toast}</div>}
+    </div>
+  );
+}
+
+function OnboardingScreen({name,selectedStruggles,toggleStruggle,onComplete}) {
+  const [step,setStep] = useState(0);
+  return (
+    <div className="onboarding-page">
+      <div className="onboarding-glow" />
+      <div className="onboarding-card">
+        <div className="onboarding-top">
+          <div className="brand-block">
+            <div className="brand-mark">✝</div>
+            <div><div className="brand-name">The Journey</div><div className="brand-tag">A personal walk through Scripture</div></div>
+          </div>
+          <span>{step + 1} / 2</span>
+        </div>
+        {step === 0 ? (
+          <div className="onboarding-body">
+            <div className="eyebrow">WELCOME</div>
+            <h1>Hey {name?.split(" ")[0] || "friend"}.</h1>
+            <p>Before we begin, tell us what you need from Scripture right now. You can change this anytime.</p>
+            <div className="onboarding-preview"><span>✦</span><div><strong>Your verse will be personal.</strong><small>We'll use your choices to guide today's Scripture and reflection.</small></div></div>
+            <button className="primary-btn" onClick={()=>setStep(1)}>Choose what I'm facing →</button>
+          </div>
+        ) : (
+          <div className="onboarding-body">
+            <div className="eyebrow">YOUR CURRENT SEASON</div>
+            <h1>What are you struggling with?</h1>
+            <p>Select anything that feels relevant. There is nothing to be ashamed of here.</p>
+            <div className="chips onboarding-chips">
+              {struggles.map(s=><button key={s} className={selectedStruggles.includes(s)?"chip selected":"chip"} onClick={()=>toggleStruggle(s)}>{s}<span>{selectedStruggles.includes(s)?"✓":"+"}</span></button>)}
+            </div>
+            <div className="onboarding-actions"><button className="ghost-btn" onClick={()=>setStep(0)}>← Back</button><button className="primary-btn" onClick={onComplete}>{selectedStruggles.length ? "Finish my Journey →" : "Skip for now →"}</button></div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
