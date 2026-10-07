@@ -17,7 +17,7 @@ const FALLBACK_PASSAGE=[
 const INITIAL=[
   ["journey_completed",{verse:false,prayer:false,reading:false,game:false,reflection:false,gratitude:false}],
   ["journey_preferences",{dailyVerse:true,nightVerse:true,morningDevotional:true,eveningReflection:true,prayerReminder:true,memoryReview:true,community:true,language:"en",familyMode:"Teen / Youth"}],
-  ["journey_stats",{xp:0,streak:0,chapters:0,prayers:0,minutes:0,games:0,reflections:0}],
+  ["journey_stats",{xp:0,streak:0,lastActive:"",chapters:0,prayers:0,minutes:0,games:0,reflections:0}],
   ["journey_goals",[]],["journey_memory",[]],["journey_checkins",[]],["journey_gratitude",[]],["journey_moments",[]],
   ["journey_testimony",{opening:"",story:"",change:"",hope:""}],["journey_community",null],["journey_blocked",[]],["journey_reports",[]],
   ["journey_plan_progress",{}],["journey_family",[]],["journey_highscores",{}],["journey_audio",{voice:true,timer:0}],
@@ -80,14 +80,6 @@ export default function App(){
   const [quickSession,setQuickSession]=useState(null);
   const unreadCount=notifications.filter(n=>!n.read).length;
 
-  INITIAL.forEach(([key])=>{
-    const valueMap={journey_completed:completed,journey_preferences:preferences,journey_stats:stats,journey_goals:goals,journey_memory:memory,
-      journey_checkins:checkins,journey_gratitude:gratitude,journey_moments:moments,journey_testimony:testimony,journey_community:community,
-      journey_blocked:blocked,journey_reports:reports,journey_plan_progress:planProgress,journey_family:family,journey_highscores:highScores,
-      journey_audio:audio,journey_reading_highlights:highlights,journey_answered_prayers:answeredPrayers,journey_prayer_categories:prayerCategories};
-    const state=valueMap[key];
-    useEffect;
-  });
   useEffect(()=>{if(user)localStorage.setItem("journey_user",JSON.stringify(user));},[user]);
   useEffect(()=>{localStorage.setItem("journey_struggles",JSON.stringify(selectedStruggles));},[selectedStruggles]);
   useEffect(()=>{localStorage.setItem("journey_notifications",JSON.stringify(notifications));},[notifications]);
@@ -126,7 +118,12 @@ export default function App(){
     setToast(title);window.setTimeout(()=>setToast(""),2600);
   };
   const markActivity=(type,xp=25)=>{
-    setStats(s=>({...s,xp:s.xp+xp,minutes:s.minutes+1}));
+    setStats(s=>{
+      const today=todayKey();
+      const yesterday=addDays(today,-1);
+      const streak=s.lastActive===today?s.streak:(s.lastActive===yesterday?s.streak+1:1);
+      return {...s,lastActive:today,streak,xp:s.xp+xp,minutes:s.minutes+1};
+    });
     setCompleted(c=>({...c,[type]:true}));
   };
   const toggleStruggle=(item)=>setSelectedStruggles(prev=>prev.includes(item)?prev.filter(x=>x!==item):[...prev,item]);
