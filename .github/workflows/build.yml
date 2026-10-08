@@ -26,3 +26,5 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Browser smoke test
         run: node scripts/runtime-smoke.mjs
+      - name: Branch Pages fallback smoke test
+        run: node scripts/branch-fallback-smoke.mjs
