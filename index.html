@@ -7,6 +7,7 @@
     <meta name="description" content="The Journey — Scripture, prayer, learning, and growth, completely free." />
     <title>The Journey — Grow in faith. Grow in Scripture.</title>
     <link rel="stylesheet" href="./src/styles.css" />
+    <style>html,body{margin:0;min-height:100%;background:#06100c}body{min-height:100vh}#root{min-height:100vh}</style>
   </head>
   <body>
     <div id="root">
@@ -46,21 +47,40 @@
           console.error("The Journey fallback startup failed:", error);
         };
 
-        const addScript = (src) => new Promise((resolve, reject) => {
-          const script = document.createElement("script");
-          script.src = src;
-          script.onload = resolve;
-          script.onerror = () => reject(new Error("Could not load " + src));
-          document.head.appendChild(script);
+        const addScript = (urls) => new Promise((resolve, reject) => {
+          const list = Array.isArray(urls) ? urls : [urls];
+          let index = 0;
+          const tryNext = () => {
+            const src = list[index++];
+            if (!src) {
+              reject(new Error("Could not load required startup dependency."));
+              return;
+            }
+            const script = document.createElement("script");
+            script.src = src;
+            script.onload = resolve;
+            script.onerror = tryNext;
+            document.head.appendChild(script);
+          };
+          tryNext();
         });
 
         const startLegacy = async () => {
           if (reactStarted || fallbackStarted) return;
           fallbackStarted = true;
           try {
-            await addScript("https://unpkg.com/@babel/standalone@7.26.10/babel.min.js");
-            await addScript("https://unpkg.com/react@18.3.1/umd/react.production.min.js");
-            await addScript("https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js");
+            await addScript([
+              "https://unpkg.com/@babel/standalone@7.26.10/babel.min.js",
+              "https://cdn.jsdelivr.net/npm/@babel/standalone@7.26.10/babel.min.js"
+            ]);
+            await addScript([
+              "https://unpkg.com/react@18.3.1/umd/react.production.min.js",
+              "https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"
+            ]);
+            await addScript([
+              "https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js",
+              "https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"
+            ]);
 
             const response = await fetch("./legacy-app.js", { cache: "no-store" });
             if (!response.ok) throw new Error("Could not load fallback application (" + response.status + ").");
