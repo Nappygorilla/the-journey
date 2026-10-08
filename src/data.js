@@ -1,7 +1,23 @@
 export const struggles=["Anxiety / worry","Fear","Anger","Temptation","Self-control","Forgiveness","Loneliness","Grief","Doubt","Relationships","Pride","Jealousy","Finding purpose","Growing closer to God","Stress","Guilt","Patience","Comparison","Discouragement","Habits","School pressure","Family tension"];
 export const navItems=[["home","Home","⌂"],["bible","Bible","✦"],["study","Study","▦"],["plans","Plans","◷"],["prayer","Prayer","♡"],["games","Games","⌁"],["devotionals","Devotionals","☼"],["community","Community","◉"],["journey","My Journey","♧"],["growth","Growth","↗"],["assistant","Study Assistant","✧"],["more","More","＋"]];
 export const books=[
-["Genesis","GEN",50],["Exodus","EXO",40],["Leviticus","LEV",27],["Numbers","NUM",36],["Deuteronomy","DEU",34],["Joshua","JOS",24],["Judges","JDG",21],["Ruth","RUT",4],["1 Samuel","1SA",31],["2 Samuel","2SA",24],["1 Kings","1KI",22],["2 Kings","2KI",25],["1 Chronicles","1CH",29],["2 Chronicles","2CH",36],["Ezra","EZR",10],["Nehemiah","NEH",13],["Esther","EST",10],["Job","JOB",42],["Psalms","PSA",150],["Proverbs","PRO",31],["Ecclesiastes","ECC",12],["Song of Solomon","SNG",8],["Isaiah","ISA",66],["Jeremiah","JER",52],["Lamentations","LAM",5],["Ezekiel","EZK",48],["Daniel","DAN",12],["Hosea","HOS",14],["Joel","JOL",3],["Amos","AMO",9],["Obadiah","OBA",1],["Jonah","JON",4],["Micah","MIC",7],["Nahum","NAM",3],["Habakkuk","HAB",3],["Zephaniah","ZEP",3],["Haggai","HAG",2],["Zechariah","ZEC",14],["Malachi","MAL",4],["Matthew","MAT",28],["Mark","MRK",16],["Luke","LUK",24],["John","JHN",21],["Acts","ACT",28],["Romans","ROM",16],["1 Corinthians","1CO",16],["2 Corinthians","2CO",13],["Galatians","GAL",6],["Ephesians","EPH",6],["Philippians","PHP",4],["Colossians","COL",4],["1 Thessalonians","1TH",5],["2 Thessalonians","2TH",3],["1 Timothy","1TI",6],["2 Timothy","2TI",4],["Titus","TIT",3],["Philemon","PHM",1],["Hebrews","HEB",13],["James","JAS",5],["1 Peter","1PE",5],["2 Peter","2PE",3],["1 John","1JN",5],["2 John","2JN",1],["3 John","3JN",1],["Jude","JUD",1],["Revelation","REV",22]];
+["Genesis","GEN",50],["Exodus","EXO",40],["Leviticus","LEV",27],["Numbers","NUM",36],["Deuteronomy","DEU",34],["Joshua","JOS",24],["Judges","JDG",21],["Ruth","RUT",4],["1 Samuel","1SA",31],["2 Samuel","2SA",24],["1 Kings","1KI",22],["2 Kings","2KI",25],["1 Chronicles","1CH",29],["2 Chronicles","2CH",36],["Ezra","EZR",10],["Nehemiah","NEH",13],["Esther","EST",10],["Job","JOB",42],["Psalms","PSA",150],["Proverbs","PRO",31],["Ecclesiastes","ECC",12],["Song of Solomon","SNG",8],["Isaiah","ISA",66],["Jeremiah","JER",52],["Lamentations","LAM",5],["Ezekiel","EZK",48],["Daniel","DAN",12],["Hosea","HOS",14],["Joel","JOL",3],["Amos","AMO",9],["Obadiah","OBA",1],["Jonah","JON",4],["Micah","MIC",7],["Nahum","NAM",3],["Habakkuk","HAB",3],["Zephaniah","ZEP",3],["Haggai","HAG",2],["Zechariah","ZEC",14],["Malachi","MAL",4],["Matthew","MAT",28],["Mark","MRK",16],["Luke","LUK",24],["John","JHN",21],["Acts","ACT",28],["Romans","ROM",16],["1 Corinthians","1CO",16],["2 Corinthians","2CO",13],["Galatians","GAL",6],["Ephesians","EPH",6],["Philippians","PHP",4],["Colossians","COL",4],["1 Thessalonians","1TH",5],["2 Thessalonians","2TH",3],["1 Timothy","1TI",6],["2 Timothy","2TI",4],["Titus","TIT",3],["Philemon","PHM",1],["Hebrews","HEB",13],["James","JAS",5],["1 Peter","1PE",5],["2 Peter","2PE",3],["1 John","1JN",5],["2 John","2JN",1],["3 John","3JN",1],["Jude","JUD",1],["Revelation","REV",22],
+["1 Esdras","1ES",9,"apocrypha","1 Esdras"],
+["2 Esdras","2ES",16,"apocrypha","2 Esdras"],
+["Tobit","TOB",14,"apocrypha","Tobit"],
+["Judith","JDT",16,"apocrypha","Judith"],
+["Wisdom of Solomon","WIS",19,"apocrypha","Wisdom of Solomon"],
+["Ecclesiasticus (Sirach)","SIR",51,"apocrypha","Ecclesiasticus"],
+["Baruch","BAR",5,"apocrypha","Baruch"],
+["Letter of Jeremiah","LJE",1,"apocrypha","Letter of Jeremiah"],
+["Prayer of Azariah","PRA",1,"apocrypha","Prayer of Azariah"],
+["Susanna","SUS",1,"apocrypha","Susanna"],
+["Bel and the Dragon","BEL",1,"apocrypha","Bel and the Dragon"],
+["Prayer of Manasseh","MAN",1,"apocrypha","Prayer of Manasseh"],
+["1 Maccabees","1MA",16,"apocrypha","1 Maccabees"],
+["2 Maccabees","2MA",15,"apocrypha","2 Maccabees"]
+];
+export const bibleBookNotes={apocrypha:"These 14 books and sections are the traditional Apocrypha included in the 1611 King James Bible tradition. Their canonical status differs across Christian traditions."};
 export const dailyVerses=[
 {ref:"Isaiah 41:10",text:"Fear thou not; for I am with thee: be not dismayed; for I am thy God.",topics:["fear","anxiety","strength","worry","courage"]},
 {ref:"Philippians 4:6",text:"Be careful for nothing; but in every thing by prayer and supplication with thanksgiving let your requests be made known unto God.",topics:["anxiety","worry","prayer","peace"]},
