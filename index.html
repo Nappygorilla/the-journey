@@ -20,6 +20,34 @@
         </div>
       </div>
     </div>
+    <script>
+      window.addEventListener("journey-react-started", () => {
+        document.documentElement.dataset.journeyReactStarted = "1";
+      });
+      window.setTimeout(() => {
+        if (document.documentElement.dataset.journeyReactStarted === "1") return;
+        const babel = document.createElement("script");
+        babel.src = "https://unpkg.com/@babel/standalone@7.26.10/babel.min.js";
+        babel.onload = () => {
+          const react = document.createElement("script");
+          react.src = "https://unpkg.com/react@18.3.1/umd/react.production.min.js";
+          react.onload = () => {
+            const dom = document.createElement("script");
+            dom.src = "https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js";
+            dom.onload = () => {
+              const app = document.createElement("script");
+              app.type = "text/babel";
+              app.setAttribute("data-presets", "react");
+              app.src = "./legacy-app.jsx";
+              document.body.appendChild(app);
+            };
+            document.body.appendChild(dom);
+          };
+          document.body.appendChild(react);
+        };
+        document.body.appendChild(babel);
+      }, 1200);
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
