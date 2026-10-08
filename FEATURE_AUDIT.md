@@ -2,8 +2,8 @@
 
 This file is generated from `src/data.js` so the requested feature inventory and its implementing screen stay in sync.
 
-**Tracked:** 142 entries  
-**Bound to a screen:** 142 entries  
+**Tracked:** 148 entries  
+**Bound to a screen:** 148 entries  
 **Coverage:** 100%
 
 ## Spiritual growth (20/20)
