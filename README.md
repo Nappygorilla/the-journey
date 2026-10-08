@@ -4,7 +4,7 @@ A completely free Christian website for Scripture, prayer, Bible study, learning
 
 ## What is included
 
-The current build tracks **142 requested feature entries** in \`src/data.js\` and exposes a **Feature Audit** screen so the inventory can be reviewed inside the website.
+The current build tracks **148 requested feature entries** in \`src/data.js\` and exposes a **Feature Audit** screen so the inventory can be reviewed inside the website.
 
 The working frontend includes:
 
