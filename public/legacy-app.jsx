@@ -1,6 +1,4 @@
-// The Journey branch-deployment fallback bundle.
-
-// This file intentionally contains the browser-runnable React source without ES module imports/exports.
+// Generated branch fallback bundle. Keep in sync with src/data.js, src/BibleAIView.jsx, src/App.jsx, and src/main.jsx.
 
 const struggles=["Anxiety / worry","Fear","Anger","Temptation","Self-control","Forgiveness","Loneliness","Grief","Doubt","Relationships","Pride","Jealousy","Finding purpose","Growing closer to God","Stress","Guilt","Patience","Comparison","Discouragement","Habits","School pressure","Family tension"];
 const navItems=[["home","Home","⌂"],["bible","Bible","✦"],["study","Study","▦"],["plans","Plans","◷"],["prayer","Prayer","♡"],["games","Games","⌁"],["devotionals","Devotionals","☼"],["community","Community","◉"],["journey","My Journey","♧"],["growth","Growth","↗"],["assistant","Bible AI","✧"],["more","More","＋"]];
@@ -99,9 +97,6 @@ const featureRoutes=Object.fromEntries(featureFlatList.map(f=>[f.item,{
   "Family mode":"more","Defining feature":"assistant","Product / UX":"more"
 }[f.group]||"more"]));
 const familyModes=["Parent / Guardian","Teen / Youth","Child-safe"];
-
-
-
 
 const MODEL_ID = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
 const MODEL_CDN = "https://esm.run/@mlc-ai/web-llm@0.2.85";
@@ -205,6 +200,7 @@ function formatError(error) {
   if (/network|fetch|cdn|module/i.test(message)) return "The local AI package could not be loaded. Check your connection and try again.";
   return "The local Bible AI could not start on this device. " + message.slice(0, 180);
 }
+
 function BibleAIView({ verse, go }) {
   const engineRef = useRef(null);
   const nativeSessionRef = useRef(null);
@@ -389,10 +385,6 @@ function BibleAIView({ verse, go }) {
   </div>;
 }
 
-
-
-
-
 const FALLBACK_PASSAGE=[
   {verse:1,text:"The LORD is my shepherd; I shall not want."},
   {verse:2,text:"He maketh me to lie down in green pastures: he leadeth me beside the still waters."},
@@ -412,7 +404,18 @@ const INITIAL=[
   ["journey_reading_highlights",[]],["journey_answered_prayers",[]],["journey_prayer_categories",{}]
 ];
 
-function safeParse(key,fallback){try{return JSON.parse(localStorage.getItem(key)) ?? fallback;}catch{return fallback;}}
+function safeParse(key,fallback){
+  try{
+    const raw=localStorage.getItem(key);
+    if(raw===null)return fallback;
+    const parsed=JSON.parse(raw);
+    if(Array.isArray(fallback))return Array.isArray(parsed)?parsed:fallback;
+    if(fallback&&typeof fallback==="object"&&!Array.isArray(fallback)){
+      return parsed&&typeof parsed==="object"&&!Array.isArray(parsed)?{...fallback,...parsed}:fallback;
+    }
+    return typeof parsed===typeof fallback?parsed:fallback;
+  }catch{return fallback;}
+}
 function todayKey(){return new Date().toISOString().slice(0,10);}
 function addDays(date,days){const d=new Date(date);d.setDate(d.getDate()+days);return d.toISOString().slice(0,10);}
 async function hashText(value){
@@ -454,7 +457,8 @@ function renderSpeechText(text,isActive,activeWord){
   });
 }
 function openExternal(url){window.open(url,"_blank","noopener,noreferrer");}
-function App(){
+
+export default function App(){
   const [user,setUser]=useState(()=>safeParse("journey_user",null));
   const [view,setView]=useState("home");
   const [authMode,setAuthMode]=useState("login");
@@ -983,10 +987,6 @@ function FeatureAuditView({go}){
     <div className="audit-note"><strong>Verification standard:</strong> this screen audits the feature inventory in <code>src/data.js</code> and gives every entry a destination route. Cloud auth, browser push delivery, multi-user community persistence, full licensed translation coverage, and external AI services are not claimed as live backend services in this frontend-only build.</div>
   </div>;
 }
-
-
-
-
 
 class AppErrorBoundary extends React.Component {
   constructor(props) {
