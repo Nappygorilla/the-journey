@@ -100,3 +100,6 @@
 .ai-actions{display:flex;gap:8px;margin-top:12px}
 @media(max-width:900px){.ai-hero,.ai-layout{grid-template-columns:1fr}.ai-hero-art{min-height:180px}.ai-hero>div:first-child{padding:28px}.ai-chat{min-height:0}.ai-messages{max-height:420px}}
 @media(max-width:620px){.ai-input-foot{align-items:stretch;flex-direction:column}.ai-input-foot>div{width:100%}.ai-input-foot>div button{flex:1}.ai-actions{flex-direction:column}}
+
+/* Scripture reader playback highlighting */
+.reading-word{display:inline;border-radius:5px;background:rgba(213,187,114,.3);color:#fff4c8;box-shadow:0 0 0 2px rgba(213,187,114,.08);padding:1px 2px;transition:background .12s ease,box-shadow .12s ease}
