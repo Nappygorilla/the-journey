@@ -438,7 +438,10 @@ function buildGameBank(mode){
   }
   if(mode==="match-character"){
     const names=biblePeople.map(p=>p[0]);
-    biblePeople.forEach(p=>bank.push([p[1],p[0],shuffleArray(names).slice(0,4)]));
+    biblePeople.forEach(p=>{
+      const options=shuffleArray([p[0],...names.filter(x=>x!==p[0])]).slice(0,4);
+      bank.push([p[1],p[0],options]);
+    });
   }
   if(mode==="match-theme"){
     const themes=parables.map(p=>p[1]).concat(teachings.map(t=>t[1])).slice(0,12);
