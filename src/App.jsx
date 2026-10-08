@@ -33,10 +33,38 @@ async function hashText(value){
   const buffer=await window.crypto.subtle.digest("SHA-256",new TextEncoder().encode(value));
   return Array.from(new Uint8Array(buffer)).map(v=>v.toString(16).padStart(2,"0")).join("");
 }
-function speak(text,rate=0.95){
+function pickNaturalVoice(){
+  const voices=window.speechSynthesis?.getVoices?.()||[];
+  const score=(voice)=>{
+    const name=(voice.name||"").toLowerCase();
+    let value=0;
+    if(/neural|natural|enhanced/.test(name))value+=8;
+    if(/google us english|microsoft|samantha|ava|allison/.test(name))value+=4;
+    if(voice.lang?.toLowerCase()==="en-us")value+=3;
+    else if(voice.lang?.toLowerCase().startsWith("en"))value+=1;
+    return value;
+  };
+  return [...voices].sort((a,b)=>score(b)-score(a))[0]||null;
+}
+function speak(text,rate=0.9){
   if(!("speechSynthesis" in window)){return false;}
   window.speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(text);u.rate=rate;window.speechSynthesis.speak(u);return true;
+  const u=new SpeechSynthesisUtterance(text);
+  const voice=pickNaturalVoice();
+  if(voice)u.voice=voice;
+  u.rate=Math.max(0.78,Math.min(1.02,rate));
+  u.pitch=1.02;
+  u.volume=1;
+  window.speechSynthesis.speak(u);
+  return true;
+}
+function renderSpeechText(text,isActive,activeWord){
+  let wordIndex=0;
+  return text.split(/(\\s+)/).map((part,index)=>{
+    if(/^\\s+$/.test(part))return part;
+    const current=wordIndex++;
+    return <span key={index} className={isActive&&current===activeWord?"reading-word":""}>{part}</span>;
+  });
 }
 function openExternal(url){window.open(url,"_blank","noopener,noreferrer");}
 
@@ -233,8 +261,9 @@ function FeatureCard({icon,title,text,onClick}){return <button className="featur
 function PageTitle({eyebrow,title,text,action}){return <div className="page-title"><div><span className="eyebrow">{eyebrow}</span><h1>{title}</h1><p>{text}</p></div>{action}</div>}
 
 function BibleView({initialSearch,savedVerses,setSavedVerses,notes,setNotes,highlights,setHighlights,audio,setAudio,stats,setStats,markActivity,notify}){
-  const [book,setBook]=useState("Psalms");const [chapter,setChapter]=useState("23");const [translationTab,setTranslationTab]=useState("side");const [passage,setPassage]=useState(FALLBACK_PASSAGE);const [webPassage,setWebPassage]=useState([]);const [loading,setLoading]=useState(false);const [query,setQuery]=useState(initialSearch||"");const [note,setNote]=useState("");const [reference,setReference]=useState("John 3:16");const [compareRef,setCompareRef]=useState("Philippians 4:6");const selected=books.find(b=>b[0]===book)||books[18];
+  const [book,setBook]=useState("Psalms");const [chapter,setChapter]=useState("23");const [translationTab,setTranslationTab]=useState("side");const [passage,setPassage]=useState(FALLBACK_PASSAGE);const [webPassage,setWebPassage]=useState([]);const [loading,setLoading]=useState(false);const [query,setQuery]=useState(initialSearch||"");const [note,setNote]=useState("");const [reference,setReference]=useState("John 3:16");const [compareRef,setCompareRef]=useState("Philippians 4:6");const [readingVerse,setReadingVerse]=useState(null);const [readingWord,setReadingWord]=useState(-1);const readingRunRef=useRef(0);const selected=books.find(b=>b[0]===book)||books[18];
   useEffect(()=>{if(initialSearch)setQuery(initialSearch);},[initialSearch]);
+  useEffect(()=>()=>{readingRunRef.current++;window.speechSynthesis?.cancel();},[]);
   useEffect(()=>{let cancelled=false;(async()=>{setLoading(true);setWebPassage([]);try{
     if(selected[3]==="apocrypha"){
       const sourceFile=selected[4]||selected[0];
@@ -258,11 +287,39 @@ function BibleView({initialSearch,savedVerses,setSavedVerses,notes,setNotes,high
   const currentRef=book+" "+chapter;
   const saveCurrentNote=()=>{if(!note.trim())return;setNotes(prev=>[{id:Date.now(),ref:currentRef,text:note.trim()},...prev]);setNote("");notify("Bible note saved","Your note is private on this device.");};
   const toggleHighlight=verse=>setHighlights(prev=>prev.includes(currentRef+":"+verse)?prev.filter(x=>x!==currentRef+":"+verse):[...prev,currentRef+":"+verse]);
-  const listen=()=>{const ok=speak(passage.map(v=>v.text).join(" "));if(ok){setAudio(a=>({...a,voice:true}));notify("Audio Bible playing","Using your browser's built-in speech reader.");}else notify("Audio unavailable","This browser does not provide speech playback.");};
+  const listen=()=>{
+    if(!("speechSynthesis" in window)){notify("Audio unavailable","This browser does not provide speech playback.");return;}
+    window.speechSynthesis.cancel();
+    const runId=++readingRunRef.current;
+    setReadingVerse(null);setReadingWord(-1);
+    let index=0;
+    const playNext=()=>{
+      if(runId!==readingRunRef.current)return;
+      if(index>=passage.length){setReadingVerse(null);setReadingWord(-1);return;}
+      const verse=passage[index++];
+      setReadingVerse(verse.verse);setReadingWord(0);
+      const utterance=new SpeechSynthesisUtterance(verse.text);
+      const voice=pickNaturalVoice();
+      if(voice)utterance.voice=voice;
+      utterance.rate=0.86;utterance.pitch=1.02;utterance.volume=1;
+      utterance.onboundary=(event)=>{
+        if(runId!==readingRunRef.current||typeof event.charIndex!=="number")return;
+        const before=verse.text.slice(0,event.charIndex).trim();
+        const current=before?before.split(/\\s+/).length-1:0;
+        setReadingWord(Math.max(0,current));
+      };
+      utterance.onend=()=>{if(runId===readingRunRef.current)window.setTimeout(playNext,100);};
+      utterance.onerror=()=>{if(runId===readingRunRef.current){setReadingVerse(null);setReadingWord(-1);}};
+      window.speechSynthesis.speak(utterance);
+    };
+    playNext();
+    setAudio(a=>({...a,voice:true}));
+    notify("Audio Bible playing","Natural browser voice with live word highlighting.");
+  };
   const saveRef=ref=>{const v=dailyVerses.find(x=>x.ref===ref)||{ref,text:"Saved reference: "+ref};setSavedVerses(prev=>prev.some(x=>x.ref===ref)?prev:[v,...prev]);};
   return <div className="page"><PageTitle eyebrow="SCRIPTURE" title="The Bible" text="Read, search, compare, highlight, listen, take notes, and move into deeper study." action={<button className="primary-btn" onClick={listen}>▶ Listen</button>}/>
     <div className="bible-toolbar"><select value={book} onChange={e=>{const value=e.target.value;const nextBook=books.find(b=>b[0]===value);setBook(value);setChapter("1");setTranslationTab(nextBook?.[3]==="apocrypha"?"kjv":"side");}}><optgroup label="Standard Bible">{books.filter(b=>b[3]!=="apocrypha").map(b=><option key={b[0]} value={b[0]}>{b[0]}</option>)}</optgroup><optgroup label="Deuterocanon & Apocrypha">{books.filter(b=>b[3]==="apocrypha").map(b=><option key={b[0]} value={b[0]}>{b[0]}</option>)}</optgroup></select><select value={chapter} onChange={e=>setChapter(e.target.value)}>{Array.from({length:selected[2]},(_,i)=><option key={i+1}>{i+1}</option>)}</select>{selected[3]==="apocrypha"?<div className="translation-tabs"><span className="extended-source-label">1611 Apocrypha</span></div>:<div className="translation-tabs"><button className={translationTab==="side"?"active":""} onClick={()=>setTranslationTab("side")}>Side by side</button><button className={translationTab==="kjv"?"active":""} onClick={()=>setTranslationTab("kjv")}>KJV</button><button className={translationTab==="web"?"active":""} onClick={()=>setTranslationTab("web")}>WEB</button></div>}</div>
-    <div className="bible-toolbar-note">{selected[3]==="apocrypha"?bibleBookNotes.apocrypha:"KJV + WEB are loaded from the current public Scripture source where available."}</div><div className="bible-layout"><div className="scripture-panel"><div className="panel-kicker">{currentRef}</div><h2>{currentRef}</h2><div className="scripture-lines">{loading?<p className="loading-line">Loading Scripture…</p>:filtered.length?filtered.map(v=><p key={v.verse} className={query?"search-hit":""} onClick={()=>toggleHighlight(v.verse)}><sup>{v.verse}</sup> <span className={highlights.includes(currentRef+":"+v.verse)?"highlighted-text":""}>{v.text}</span></p>):<div className="empty-state">No verses here match “{query}”.</div>}</div><div className="scripture-tools"><button onClick={()=>{const v=prompt("Type a note for this chapter");if(v){setNotes(prev=>[{id:Date.now(),ref:currentRef,text:v},...prev]);notify("Note saved","Added to your private Bible notes.");}}}>✎ Note</button><button onClick={()=>{filtered.forEach(v=>toggleHighlight(v.verse));notify("Highlight updated","Tap any verse to toggle individual highlights.");}}>🖍 Highlight</button><button onClick={()=>{setTranslationTab("side");notify("Side-by-side open","KJV and WEB are shown together where the source is available.");}}>⇄ Compare</button><button onClick={()=>notify("Cross-references open","Use the Study tab for the full reference explorer.")}>↗ Cross-references</button><button onClick={()=>notify("Study mode","Use the Study Assistant for guided questions and context.")}>▦ Study</button></div></div>
+    <div className="bible-toolbar-note">{selected[3]==="apocrypha"?bibleBookNotes.apocrypha:"KJV + WEB are loaded from the current public Scripture source where available."}</div><div className="bible-layout"><div className="scripture-panel"><div className="panel-kicker">{currentRef}</div><h2>{currentRef}</h2><div className="scripture-lines">{loading?<p className="loading-line">Loading Scripture…</p>:filtered.length?filtered.map(v=><p key={v.verse} className={query?"search-hit":""} onClick={()=>toggleHighlight(v.verse)}><sup>{v.verse}</sup> <span className={highlights.includes(currentRef+":"+v.verse)?"highlighted-text":""}>{readingVerse===v.verse?renderSpeechText(v.text,true,readingWord):v.text}</span></p>):<div className="empty-state">No verses here match “{query}”.</div>}</div><div className="scripture-tools"><button onClick={()=>{const v=prompt("Type a note for this chapter");if(v){setNotes(prev=>[{id:Date.now(),ref:currentRef,text:v},...prev]);notify("Note saved","Added to your private Bible notes.");}}}>✎ Note</button><button onClick={()=>{filtered.forEach(v=>toggleHighlight(v.verse));notify("Highlight updated","Tap any verse to toggle individual highlights.");}}>🖍 Highlight</button><button onClick={()=>{setTranslationTab("side");notify("Side-by-side open","KJV and WEB are shown together where the source is available.");}}>⇄ Compare</button><button onClick={()=>notify("Cross-references open","Use the Study tab for the full reference explorer.")}>↗ Cross-references</button><button onClick={()=>notify("Study mode","Use the Study Assistant for guided questions and context.")}>▦ Study</button></div></div>
       <div className="study-side"><div className="side-card"><div className="side-card-head"><strong>Search</strong><span>{filtered.length}</span></div><div className="compact-search"><span>⌕</span><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search this chapter..."/></div></div>
         {translationTab==="side"&&<div className="side-card"><div className="side-card-head"><strong>Translation comparison</strong><span>KJV / WEB</span></div><div className="translation-compare"><div><b>KJV</b>{passage.slice(0,6).map(v=><p key={"k"+v.verse}><sup>{v.verse}</sup>{v.text}</p>)}</div><div><b>WEB</b>{(webPassage.length?webPassage:passage).slice(0,6).map(v=><p key={"w"+v.verse}><sup>{v.verse}</sup>{v.text}</p>)}</div></div></div>}
         <div className="side-card"><div className="side-card-head"><strong>Reference jump</strong><span>Quick save</span></div><div className="input-row"><input value={reference} onChange={e=>setReference(e.target.value)} placeholder="John 3:16"/><button className="ghost-btn" onClick={()=>{saveRef(reference);notify("Reference saved","Saved "+reference+" to your Scripture library.");}}>Save</button></div><div className="muted small-copy">Try John 3:16, Psalm 23:1, or Romans 8:1.</div></div>
@@ -316,14 +373,109 @@ function PrayerView({prayers,setPrayers,answered,setAnswered,categories,setCateg
   </div>;
 }
 
+function shuffleArray(items){
+  const next=[...items];
+  for(let i=next.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[next[i],next[j]]=[next[j],next[i]];}
+  return next;
+}
+function buildGameBank(mode){
+  const sourceGroups={
+    trivia:Object.keys(quizSets),
+    speed:Object.keys(quizSets),
+    multiple:["multiple","trivia","book","verse","geography","timeline","who","truefalse"],
+    who:["who","match-character"],
+    book:["book","otnt","match-theme"],
+    verse:["verse","complete"],
+    complete:["complete","verse"],
+    timeline:["timeline"],
+    geography:["geography"],
+    "match-character":["match-character","who"],
+    "match-theme":["match-theme","book"],
+    otnt:["otnt"]
+  };
+  const bank=(sourceGroups[mode]||[mode]).flatMap(key=>quizSets[key]||[]).map(item=>[...item]);
+  const unique=(items)=>{
+    const seen=new Set();
+    return items.filter(item=>{
+      const key=item[0]+"|"+item[1];
+      if(seen.has(key))return false;
+      seen.add(key);return true;
+    });
+  };
+  if(mode==="truefalse"){
+    const books66=books.filter(b=>b[3]!=="apocrypha").slice(0,66);
+    bank.push(...books66.map((b)=>[b[0]+" is in the Old Testament.",b[0] in Object.fromEntries(books66.slice(0,39).map(x=>[x[0],true]))?"True":"False",["True","False"]]));
+  }
+  if(mode==="otnt"){
+    const books66=books.filter(b=>b[3]!=="apocrypha").slice(0,66);
+    const oldSet=new Set(books66.slice(0,39).map(b=>b[0]));
+    bank.push(...books66.map(b=>["Where is "+b[0]+" found?",oldSet.has(b[0])?"Old Testament":"New Testament",["Old Testament","New Testament"]]));
+  }
+  if(mode==="geography"){
+    const regions=[...new Set(biblePlaces.map(p=>p[2]))];
+    biblePlaces.forEach(p=>bank.push(["Which region is associated with "+p[0]+"?",p[2],shuffleArray(regions).slice(0,4)]));
+  }
+  if(mode==="timeline"){
+    for(let i=0;i<timeline.length;i++){
+      if(i>0){
+        const earlier=timeline[i-1];
+        const options=shuffleArray(timeline.map(x=>x[0])).slice(0,4);
+        if(!options.includes(earlier[0]))options[0]=earlier[0];
+        bank.push(["Which event comes just before "+timeline[i][0]+"?",earlier[0],options]);
+      }
+    }
+  }
+  if(mode==="complete"){
+    dailyVerses.forEach(v=>{
+      const words=v.text.trim().split(/\s+/);
+      const answer=words[words.length-1].replace(/[.,;:!?]+$/,"");
+      if(answer.length>2){
+        const options=shuffleArray([answer,"faith","peace","hope","wisdom"]).slice(0,4);
+        if(!options.includes(answer))options[0]=answer;
+        bank.push(["Complete the final word from "+v.ref+": “"+words.slice(0,-1).join(" ")+" ____”",answer,options]);
+      }
+    });
+  }
+  if(mode==="match-character"){
+    const names=biblePeople.map(p=>p[0]);
+    biblePeople.forEach(p=>bank.push([p[1],p[0],shuffleArray(names).slice(0,4)]));
+  }
+  if(mode==="match-theme"){
+    const themes=parables.map(p=>p[1]).concat(teachings.map(t=>t[1])).slice(0,12);
+    parables.forEach(p=>bank.push(["Which theme best matches “"+p[0]+"”?",p[1],shuffleArray(themes).slice(0,4)]));
+  }
+  return unique(bank);
+}
+
 function GamesView({highScores,setHighScores,stats,setStats,markActivity,notify}){
-  const [active,setActive]=useState(null);const [score,setScore]=useState(0);const [q,setQ]=useState(0);const [started,setStarted]=useState(0);const questions=active?(quizSets[active]||quizSets.trivia):[];
-  const start=id=>{setActive(id);setScore(0);setQ(0);setStarted(Date.now());};
-  const answer=a=>{const item=questions[q];const correct=a===item[1];const nextScore=score+(correct?100:0);setScore(nextScore);if(q<questions.length-1){setQ(q+1);return;}const elapsed=Math.max(1,Math.round((Date.now()-started)/1000));const modeScore=Math.max(nextScore,(highScores[active]||0));setHighScores(h=>({...h,[active]:modeScore}));setStats(s=>({...s,xp:s.xp+nextScore,games:s.games+1}));markActivity("game",nextScore?Math.round(nextScore/10):20);notify("Challenge complete",correct?"Great finish. Your XP increased.":"Challenge complete. Review the answers and try again.");setActive(null);};
-  if(active)return <div className="page game-player"><button className="back-btn" onClick={()=>setActive(null)}>← Games</button><div className="game-shell"><div className="game-top"><span className="eyebrow">{gameCatalog.find(g=>g[0]===active)?.[1]}</span><strong>{q+1} / {questions.length}</strong></div><div className="game-progress"><span style={{width:(q/questions.length)*100+"%"}}/></div><h1>{questions[q][0]}</h1><div className="answers">{questions[q][2].map(a=><button key={a} onClick={()=>answer(a)}>{a}<span>→</span></button>)}</div><div className="game-hint">Daily 5-question mode is the same quick engine; weekly tournament records your best local score.</div></div></div>;
+  const [active,setActive]=useState(null);const [sessionQuestions,setSessionQuestions]=useState([]);const [score,setScore]=useState(0);const [q,setQ]=useState(0);const [started,setStarted]=useState(0);
+  const questions=active?sessionQuestions:[];
+  const start=(id)=>{
+    const bank=buildGameBank(id);
+    const storageKey="journey_game_seen_"+id;
+    let seen=safeParse(storageKey,[]);
+    let available=bank.filter(item=>!seen.includes(item[0]+"|"+item[1]));
+    if(available.length<5){seen=[];available=bank;}
+    const session=shuffleArray(available).slice(0,Math.min(5,available.length)).map(item=>[item[0],item[1],shuffleArray(item[2]||[])]);
+    setActive(id);setSessionQuestions(session);setScore(0);setQ(0);setStarted(Date.now());
+    localStorage.setItem(storageKey,JSON.stringify([...seen,...session.map(item=>item[0]+"|"+item[1])]));
+  };
+  const answer=(a)=>{
+    const item=questions[q];if(!item)return;
+    const correct=a===item[1];const nextScore=score+(correct?100:0);setScore(nextScore);
+    if(q<questions.length-1){setQ(q+1);return;}
+    const elapsed=Math.max(1,Math.round((Date.now()-started)/1000));const modeScore=Math.max(nextScore,(highScores[active]||0));
+    setHighScores(h=>({...h,[active]:modeScore}));
+    setStats(s=>({...s,xp:s.xp+nextScore,games:s.games+1}));
+    markActivity("game",nextScore?Math.round(nextScore/10):20);
+    notify("Challenge complete",correct?"Great finish. Fresh questions are ready for your next round.":"Challenge complete. A fresh question set is ready for next time.");
+    void elapsed;
+    setActive(null);
+  };
+  if(active)return <div className="page game-player"><button className="back-btn" onClick={()=>setActive(null)}>← Games</button><div className="game-shell"><div className="game-top"><span className="eyebrow">{gameCatalog.find(g=>g[0]===active)?.[1]}</span><strong>{q+1} / {questions.length}</strong></div><div className="game-progress"><span style={{width:((q)/Math.max(1,questions.length))*100+"%"}}/></div><h1>{questions[q]?.[0]}</h1><div className="answers">{(questions[q]?.[2]||[]).map(a=><button key={a} onClick={()=>answer(a)}>{a}<span>→</span></button>)}</div><div className="game-hint">Questions are randomized and tracked locally so repeats are avoided until the available question pool has been used.</div></div></div>;
   const rank=Math.max(1,Math.floor(stats.xp/500)+1);return <div className="page"><PageTitle eyebrow="LEARN BY DOING" title="Bible Games" text="Thirteen game modes, daily and weekly challenges, XP, levels, badges, achievements, and high scores."/>
     <div className="level-strip"><div><span className="eyebrow">LEVEL</span><strong>{rank<3?"Growing":rank<6?"Steady":"Deepening"}</strong></div><div className="level-meter"><span style={{width:Math.min(100,(stats.xp%500)/5)+"%"}}/></div><div className="xp">{stats.xp.toLocaleString()} XP</div></div>
-    <div className="game-meta-grid"><div className="panel-card"><div className="eyebrow">DAILY 5</div><h3>Five-question challenge</h3><p>One quick session each day. Your score feeds XP and your Journey.</p><button className="primary-btn" onClick={()=>start("trivia")}>Play today →</button></div><div className="panel-card"><div className="eyebrow">WEEKLY TOURNAMENT</div><h3>Beat your best</h3><p>Weekly mode uses the speed set. High score is stored locally on this device.</p><div className="highscore">{highScores.speed||0}<span>best XP</span></div><button className="ghost-btn" onClick={()=>start("speed")}>Enter tournament</button></div></div>
+    <div className="game-meta-grid"><div className="panel-card"><div className="eyebrow">DAILY 5</div><h3>Five-question challenge</h3><p>Each round rotates in fresh questions instead of replaying the same five.</p><button className="primary-btn" onClick={()=>start("trivia")}>Play today →</button></div><div className="panel-card"><div className="eyebrow">WEEKLY TOURNAMENT</div><h3>Beat your best</h3><p>Weekly mode uses the expanded speed-question pool. High score is stored locally on this device.</p><div className="highscore">{highScores.speed||0}<span>best XP</span></div><button className="ghost-btn" onClick={()=>start("speed")}>Enter tournament</button></div></div>
     <div className="game-grid">{gameCatalog.map(g=><button className="game-card" key={g[0]} onClick={()=>start(g[0])}><div className="game-icon">{g[3]}</div><div className="eyebrow">{g[0]==="speed"?"WEEKLY":"PLAY"}</div><h3>{g[1]}</h3><p>{g[2]}</p><span>Play →</span>{highScores[g[0]]>0&&<small className="game-high">Best {highScores[g[0]]}</small>}</button>)}</div>
     <div className="achievement-strip"><span>✦</span><div><strong>Achievements & badges</strong><p>{stats.games} games played. Earn the First Step, Scripture Lover, Faithful, Bible Scholar, and The Journey milestones as you use the app.</p></div></div>
   </div>;
