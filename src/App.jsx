@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import BibleAIView from "./BibleAIView";
 import {
   archaeology,biblePeople,biblePlaces,bibleBookNotes,books,crossRefs,dailyVerses,devotionals,featureFlatList,featureGroups,
   familyModes,featureRoutes,gameCatalog,genealogies,kings,languagePack,lexicon,miracles,moods,needs,navItems,parables,
@@ -168,7 +169,7 @@ export default function App(){
         {view==="community"&&<CommunityView posts={community} setPosts={setCommunity} blocked={blocked} setBlocked={setBlocked} reports={reports} setReports={setReports} notify={notify}/>}
         {view==="journey"&&<JourneyView user={user} selectedStruggles={selectedStruggles} toggleStruggle={toggleStruggle} completed={completed} savedVerses={savedVerses} prayers={prayers} notes={notes} stats={stats} goals={goals} setGoals={setGoals} memory={memory} setMemory={setMemory} checkins={checkins} setCheckins={setCheckins} gratitude={gratitude} setGratitude={setGratitude} moments={moments} setMoments={setMoments} testimony={testimony} setTestimony={setTestimony} go={go} notify={notify}/>}
         {view==="growth"&&<GrowthView stats={stats} setStats={setStats} goals={goals} setGoals={setGoals} memory={memory} setMemory={setMemory} checkins={checkins} setCheckins={setCheckins} gratitude={gratitude} setGratitude={setGratitude} moments={moments} setMoments={setMoments} testimony={testimony} setTestimony={setTestimony} markActivity={markActivity} notify={notify}/>}
-        {view==="assistant"&&<AssistantView verse={currentVerse} quickSession={quickSession} setQuickSession={setQuickSession} go={go} notify={notify}/>}
+        {view==="assistant"&&<BibleAIView verse={currentVerse} go={go}/>}
         {view==="more"&&<MoreView preferences={preferences} setPreferences={setPreferences} family={family} setFamily={setFamily} audio={audio} setAudio={setAudio} go={go} notify={notify}/>}
         {view==="settings"&&<SettingsView user={user} setUser={setUser} preferences={preferences} setPreferences={setPreferences} notifications={notifications} setNotifications={setNotifications} selectedStruggles={selectedStruggles} toggleStruggle={toggleStruggle} family={family} setFamily={setFamily} notify={notify}/>}
         {view==="audit"&&<FeatureAuditView go={go}/>}
