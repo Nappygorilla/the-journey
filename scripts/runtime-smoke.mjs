@@ -32,6 +32,10 @@ try {
 
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
+  await page.addInitScript(() => {
+    localStorage.setItem("journey_user", JSON.stringify({name:"Smoke Test", email:"smoke@example.com"}));
+    localStorage.setItem("journey_onboarded", "1");
+  });
   const errors = [];
 
   page.on("pageerror", error => errors.push(error.message));
@@ -57,7 +61,21 @@ try {
   if (!bodyText.trim()) throw new Error("Rendered page has no visible text.");
   if (errors.length) throw new Error("Browser errors:\n" + errors.join("\n"));
 
-  console.log("Runtime smoke test passed for " + basePath + ".");
+  const checkScreen = async (label, expectedText) => {
+    const button = page.getByRole("button", { name: label, exact: true });
+    await button.click();
+    await page.waitForTimeout(250);
+    const text = await page.locator("body").innerText();
+    if (!text.includes(expectedText)) {
+      throw new Error("Screen check failed for " + label + ": expected visible text " + expectedText);
+    }
+  };
+
+  await checkScreen("Bible", "The Bible");
+  await checkScreen("Bible AI", "Bible Guide");
+  await checkScreen("Games", "Bible Games");
+
+  console.log("Runtime smoke test passed for " + basePath + " and checked Bible, Bible AI, and Games.");
   console.log("Visible text characters:", bodyText.trim().length);
 
   await browser.close();
