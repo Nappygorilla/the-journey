@@ -62,12 +62,21 @@ try {
   if (errors.length) throw new Error("Browser errors:\n" + errors.join("\n"));
 
   const checkScreen = async (label, expectedText) => {
-    const button = page.getByRole("button", { name: label, exact: true });
+    const button = page.locator("button").filter({ hasText: label }).first();
+    const count = await button.count();
+    if (!count) {
+      const visible = await page.locator("body").innerText();
+      const storage = await page.evaluate(() => ({
+        user: localStorage.getItem("journey_user"),
+        onboarded: localStorage.getItem("journey_onboarded")
+      }));
+      throw new Error("Navigation button not found: " + label + "\nVisible text:\n" + visible.slice(0, 2000) + "\nStorage:\n" + JSON.stringify(storage));
+    }
     await button.click();
     await page.waitForTimeout(250);
     const text = await page.locator("body").innerText();
     if (!text.includes(expectedText)) {
-      throw new Error("Screen check failed for " + label + ": expected visible text " + expectedText);
+      throw new Error("Screen check failed for " + label + ": expected visible text " + expectedText + "\nVisible text:\n" + text.slice(0, 2000));
     }
   };
 
