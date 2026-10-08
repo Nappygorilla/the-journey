@@ -30,6 +30,9 @@ function safeParse(key,fallback){
     const raw=localStorage.getItem(key);
     if(raw===null)return fallback;
     const parsed=JSON.parse(raw);
+    if(fallback===null){
+      return parsed&&typeof parsed==="object"&&!Array.isArray(parsed)?parsed:fallback;
+    }
     if(Array.isArray(fallback))return Array.isArray(parsed)?parsed:fallback;
     if(fallback&&typeof fallback==="object"&&!Array.isArray(fallback)){
       return parsed&&typeof parsed==="object"&&!Array.isArray(parsed)?{...fallback,...parsed}:fallback;
