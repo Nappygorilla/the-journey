@@ -1,6 +1,6 @@
 import { featureFlatList, featureRoutes } from "../src/data.js";
 
-const expected = 144;
+const expected = 147;
 const missing = featureFlatList.filter(item => !item.item || !item.status || !featureRoutes[item.item]);
 const groups = new Set(featureFlatList.map(item => item.group));
 
