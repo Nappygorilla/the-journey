@@ -20,6 +20,8 @@ jobs:
         run: npm install
       - name: Feature audit
         run: npm run audit:features
+      - name: Deep source audit
+        run: node scripts/deep-audit.mjs
       - name: Build
         run: npm run build
       - name: Install browser smoke-test dependency
