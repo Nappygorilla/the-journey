@@ -25,7 +25,18 @@ const INITIAL=[
   ["journey_reading_highlights",[]],["journey_answered_prayers",[]],["journey_prayer_categories",{}]
 ];
 
-function safeParse(key,fallback){try{return JSON.parse(localStorage.getItem(key)) ?? fallback;}catch{return fallback;}}
+function safeParse(key,fallback){
+  try{
+    const raw=localStorage.getItem(key);
+    if(raw===null)return fallback;
+    const parsed=JSON.parse(raw);
+    if(Array.isArray(fallback))return Array.isArray(parsed)?parsed:fallback;
+    if(fallback&&typeof fallback==="object"){
+      return parsed&&typeof parsed==="object"&&!Array.isArray(parsed)?parsed:fallback;
+    }
+    return typeof parsed===typeof fallback?parsed:fallback;
+  }catch{return fallback;}
+}
 function todayKey(){return new Date().toISOString().slice(0,10);}
 function addDays(date,days){const d=new Date(date);d.setDate(d.getDate()+days);return d.toISOString().slice(0,10);}
 async function hashText(value){
