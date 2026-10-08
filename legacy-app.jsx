@@ -1,4 +1,4 @@
-// Generated branch fallback bundle. Keep in sync with src/data.js, src/BibleAIView.jsx, src/App.jsx, and src/main.jsx.
+// Generated branch fallback bundle.
 
 const struggles=["Anxiety / worry","Fear","Anger","Temptation","Self-control","Forgiveness","Loneliness","Grief","Doubt","Relationships","Pride","Jealousy","Finding purpose","Growing closer to God","Stress","Guilt","Patience","Comparison","Discouragement","Habits","School pressure","Family tension"];
 const navItems=[["home","Home","⌂"],["bible","Bible","✦"],["study","Study","▦"],["plans","Plans","◷"],["prayer","Prayer","♡"],["games","Games","⌁"],["devotionals","Devotionals","☼"],["community","Community","◉"],["journey","My Journey","♧"],["growth","Growth","↗"],["assistant","Bible AI","✧"],["more","More","＋"]];
@@ -409,6 +409,9 @@ function safeParse(key,fallback){
     const raw=localStorage.getItem(key);
     if(raw===null)return fallback;
     const parsed=JSON.parse(raw);
+    if(fallback===null){
+      return parsed&&typeof parsed==="object"&&!Array.isArray(parsed)?parsed:fallback;
+    }
     if(Array.isArray(fallback))return Array.isArray(parsed)?parsed:fallback;
     if(fallback&&typeof fallback==="object"&&!Array.isArray(fallback)){
       return parsed&&typeof parsed==="object"&&!Array.isArray(parsed)?{...fallback,...parsed}:fallback;
