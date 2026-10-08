@@ -458,7 +458,7 @@ function renderSpeechText(text,isActive,activeWord){
 }
 function openExternal(url){window.open(url,"_blank","noopener,noreferrer");}
 
-export default function App(){
+function App(){
   const [user,setUser]=useState(()=>safeParse("journey_user",null));
   const [view,setView]=useState("home");
   const [authMode,setAuthMode]=useState("login");
