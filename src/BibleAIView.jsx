@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { books, crossRefs, dailyVerses, lexicon, parables, studyBooks, teachings } from "./data";
 
 const MODEL_ID = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
@@ -108,6 +108,8 @@ export default function BibleAIView({ verse, go }) {
   const engineRef = useRef(null);
   const nativeSessionRef = useRef(null);
   const moduleRef = useRef(null);
+  const inputRef = useRef(null);
+  const recognitionRef = useRef(null);
   const [messages, setMessages] = useState([
     {
       role: "assistant",
@@ -120,7 +122,16 @@ export default function BibleAIView({ verse, go }) {
   const [statusText, setStatusText] = useState("No API key • runs locally in your browser");
   const [provider, setProvider] = useState("");
   const [error, setError] = useState("");
+  const [listening, setListening] = useState(false);
   const busy = status === "loading" || status === "thinking";
+  const speechRecognitionSupported = Boolean(window.SpeechRecognition || window.webkitSpeechRecognition);
+
+  useEffect(() => {
+    inputRef.current?.focus?.();
+    return () => {
+      recognitionRef.current?.stop?.();
+    };
+  }, []);
 
   const starterPrompts = useMemo(() => [
     "Explain John 3:16 in simple language.",
@@ -128,6 +139,38 @@ export default function BibleAIView({ verse, go }) {
     "Who was Peter, and what can I learn from his story?",
     "Why did Jesus use parables?"
   ], []);
+
+  const toggleVoiceInput = () => {
+    if (listening) {
+      recognitionRef.current?.stop?.();
+      setListening(false);
+      return;
+    }
+    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!Recognition) {
+      setError("Voice input is not available in this browser. You can still type your question.");
+      return;
+    }
+    const recognition = new Recognition();
+    recognition.lang = "en-US";
+    recognition.interimResults = true;
+    recognition.continuous = false;
+    recognition.onstart = () => {
+      setError("");
+      setListening(true);
+    };
+    recognition.onresult = (event) => {
+      const transcript = Array.from(event.results).map(result => result[0]?.transcript || "").join(" ").trim();
+      if (transcript) setInput(transcript);
+    };
+    recognition.onerror = (event) => {
+      setListening(false);
+      setError(event.error === "not-allowed" ? "Microphone permission was denied. You can type your question instead." : "Voice input stopped. You can type your question instead.");
+    };
+    recognition.onend = () => setListening(false);
+    recognitionRef.current = recognition;
+    recognition.start();
+  };
 
   const createNativeSession = async () => {
     const LanguageModel = window.LanguageModel;
@@ -263,27 +306,28 @@ export default function BibleAIView({ verse, go }) {
         </div>
         {progress > 0 && progress < 100 && <div className="ai-progress"><span style={{ width: progress + "%" }}/></div>}
         {error && <div className="ai-error">{error}<button className="text-btn" onClick={initialize}>Try again</button></div>}
-        {!nativeSessionRef.current && !engineRef.current && <button className="primary-btn" disabled={busy} onClick={initialize}>Start local Bible AI →</button>}
+        {!nativeSessionRef.current && !engineRef.current && <div className="ai-hero-actions"><button className="primary-btn" disabled={busy} onClick={initialize}>Start local Bible AI →</button><button className="ghost-btn" onClick={() => document.getElementById("bible-ai-chat")?.scrollIntoView({behavior:"smooth"})}>Ask a question ↓</button></div>}
       </div>
       <div className="ai-hero-art"><div className="ai-orbit">✝</div><div className="ai-pulse">AI</div></div>
     </div>
 
     <div className="ai-layout">
-      <section className="panel-card">
+      <section className="panel-card ai-ask-card">
         <div className="eyebrow">ASK SCRIPTURE</div>
-        <h3>Your Bible question</h3>
-        <div className="ai-starters">{starterPrompts.map((prompt) => <button key={prompt} onClick={() => setInput(prompt)}>{prompt}</button>)}</div>
-        <textarea className="ai-input" rows="5" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if ((e.ctrlKey || e.metaKey) && e.key === "Enter") send(); }} placeholder="Ask about Scripture, a Bible person, history, context, themes, or how two passages connect…"/>
-        <div className="ai-input-foot"><span>Ctrl/Cmd + Enter to ask</span><div><button className="ghost-btn" onClick={clearChat}>New session</button><button className="primary-btn" disabled={busy || !input.trim()} onClick={() => send()}>Ask Bible Guide →</button></div></div>
+        <h3>Talk with your Bible Guide</h3>
+        <p className="ai-lead">Type a question or use the microphone. Ask for a simple explanation, context, connections between passages, or help studying a difficult part of the Bible.</p>
+        <div className="ai-starters">{starterPrompts.map((prompt) => <button key={prompt} onClick={() => {setInput(prompt);inputRef.current?.focus?.();}}>{prompt}</button>)}</div>
+        <textarea ref={inputRef} className="ai-input" rows="6" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if ((e.ctrlKey || e.metaKey) && e.key === "Enter") send(); }} placeholder="Example: Why did Jesus tell the parable of the prodigal son?"/>
+        <div className="ai-input-foot"><span>{speechRecognitionSupported ? "Type • Speak • Ctrl/Cmd + Enter" : "Type • Ctrl/Cmd + Enter"}</span><div><button className={"ghost-btn "+(listening?"ai-listening":"")} onClick={toggleVoiceInput} disabled={busy}>{listening?"● Listening…":"🎙 Speak question"}</button><button className="ghost-btn" onClick={clearChat}>New session</button><button className="primary-btn" disabled={busy || !input.trim()} onClick={() => send()}>Ask Bible Guide →</button></div></div>
       </section>
 
-      <section className="panel-card ai-chat">
+      <section className="panel-card ai-chat" id="bible-ai-chat">
         <div className="ai-chat-head"><div><div className="eyebrow">CONVERSATION</div><h3>Scripture-grounded answers</h3></div><span className="muted">{messages.length - 1} messages</span></div>
         <div className="ai-messages">{messages.map((message, index) => <div className={"ai-message " + message.role} key={index}><div className="ai-avatar">{message.role === "assistant" ? "✦" : "You"}</div><div><strong>{message.role === "assistant" ? "Bible Guide" : "You"}</strong><p>{message.content}</p></div></div>)}</div>
       </section>
     </div>
 
-    <div className="ai-note"><strong>How it works:</strong> the first run may download a browser model. WebLLM runs the language model in the browser using WebGPU, while supported Chrome devices can use Chrome's own on-device Prompt API. No OpenAI, Gemini, Claude, or other paid API key is used. Model: Llama 3.2 1B via WebLLM.</div>
+    <div className="ai-note"><strong>How it works:</strong> the first run may download a browser model. WebLLM runs the language model in the browser using WebGPU, while supported Chrome devices can use Chrome's own on-device Prompt API. No OpenAI, Gemini, Claude, or other paid API key is used. Voice input uses your browser's speech recognition when available.</div>
     <div className="ai-actions"><button className="ghost-btn" onClick={() => go("bible")}>Open Bible reader</button><button className="ghost-btn" onClick={() => go("study")}>Open study tools</button></div>
   </div>;
 }
