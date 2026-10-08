@@ -40,6 +40,7 @@ class AppErrorBoundary extends React.Component {
   }
 }
 
+window.dispatchEvent(new Event("journey-react-started"));
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <AppErrorBoundary>
