@@ -264,11 +264,11 @@ function Stat({label,value,icon}){return <div className="stat-card"><span classN
 function FeatureCard({icon,title,text,onClick}){return <button className="feature-card" onClick={onClick}><span className="feature-icon">{icon}</span><span><strong>{title}</strong><small>{text}</small></span><b>→</b></button>}
 function PageTitle({eyebrow,title,text,action}){return <div className="page-title"><div><span className="eyebrow">{eyebrow}</span><h1>{title}</h1><p>{text}</p></div>{action}</div>}
 
-function BibleView({initialSearch,savedVerses,setSavedVerses,notes,setNotes,highlights,setHighlights,audio,setAudio,stats,setStats,markActivity,notify}){
-  const [book,setBook]=useState("Psalms");const [chapter,setChapter]=useState("23");const [translationTab,setTranslationTab]=useState("side");const [passage,setPassage]=useState(FALLBACK_PASSAGE);const [webPassage,setWebPassage]=useState([]);const [loading,setLoading]=useState(false);const [query,setQuery]=useState(initialSearch||"");const [note,setNote]=useState("");const [reference,setReference]=useState("John 3:16");const [compareRef,setCompareRef]=useState("Philippians 4:6");const [readingVerse,setReadingVerse]=useState(null);const [readingWord,setReadingWord]=useState(-1);const [readingState,setReadingState]=useState("stopped");const [voices,setVoices]=useState([]);const [voiceURI,setVoiceURI]=useState("");const readingRunRef=useRef(0);const queueRef=useRef([]);const queueIndexRef=useRef(0);const selected=books.find(b=>b[0]===book)||books[18];
+function BibleView({initialSearch,savedVerses,setSavedVerses,notes,setNotes,highlights,setHighlights,audio,setAudio,stats,setStats,markActivity,notify,go}){
+  const [book,setBook]=useState("Psalms");const [chapter,setChapter]=useState("23");const [translationTab,setTranslationTab]=useState("side");const [passage,setPassage]=useState(FALLBACK_PASSAGE);const [webPassage,setWebPassage]=useState([]);const [loading,setLoading]=useState(false);const [query,setQuery]=useState(initialSearch||"");const [note,setNote]=useState("");const [reference,setReference]=useState("John 3:16");const [compareRef,setCompareRef]=useState("Philippians 4:6");const [readingVerse,setReadingVerse]=useState(null);const [readingWord,setReadingWord]=useState(-1);const [readingState,setReadingState]=useState("stopped");const [browserVoices,setBrowserVoices]=useState([]);const [browserVoiceURI,setBrowserVoiceURI]=useState("");const [voiceEngine,setVoiceEngine]=useState("neural");const [neuralVoices,setNeuralVoices]=useState([]);const [neuralVoice,setNeuralVoice]=useState("af_heart");const [neuralStatus,setNeuralStatus]=useState("not-loaded");const [neuralError,setNeuralError]=useState("");const readingRunRef=useRef(0);const queueRef=useRef([]);const queueIndexRef=useRef(0);const kokoroRef=useRef(null);const kokoroAudioRef=useRef(null);const kokoroUrlRef=useRef("");const selected=books.find(b=>b[0]===book)||books[18];
   useEffect(()=>{if(initialSearch)setQuery(initialSearch);},[initialSearch]);
-  useEffect(()=>{const loadVoices=()=>{const next=getSpeechVoices();setVoices(next);setVoiceURI(current=>{if(current&&next.some(v=>(v.voiceURI||v.name)===current))return current;const best=pickNaturalVoice(next);return best?(best.voiceURI||best.name):"";});};loadVoices();window.speechSynthesis?.addEventListener?.("voiceschanged",loadVoices);return()=>window.speechSynthesis?.removeEventListener?.("voiceschanged",loadVoices);},[]);
-  useEffect(()=>()=>{readingRunRef.current++;queueRef.current=[];window.speechSynthesis?.cancel();},[]);
+  useEffect(()=>{const loadVoices=()=>{const next=getSpeechVoices();setBrowserVoices(next);setBrowserVoiceURI(current=>{if(current&&next.some(v=>(v.voiceURI||v.name)===current))return current;const best=pickNaturalVoice(next);return best?(best.voiceURI||best.name):"";});};loadVoices();window.speechSynthesis?.addEventListener?.("voiceschanged",loadVoices);return()=>window.speechSynthesis?.removeEventListener?.("voiceschanged",loadVoices);},[]);
+  useEffect(()=>()=>{readingRunRef.current++;queueRef.current=[];window.speechSynthesis?.cancel();kokoroAudioRef.current?.pause?.();if(kokoroUrlRef.current)URL.revokeObjectURL(kokoroUrlRef.current);kokoroAudioRef.current=null;kokoroRef.current=null;},[]);
   useEffect(()=>{let cancelled=false;(async()=>{setLoading(true);setWebPassage([]);try{
     if(selected[3]==="apocrypha"){
       const sourceFile=selected[4]||selected[0];
@@ -292,67 +292,103 @@ function BibleView({initialSearch,savedVerses,setSavedVerses,notes,setNotes,high
   const currentRef=book+" "+chapter;
   const saveCurrentNote=()=>{if(!note.trim())return;setNotes(prev=>[{id:Date.now(),ref:currentRef,text:note.trim()},...prev]);setNote("");notify("Bible note saved","Your note is private on this device.");};
   const toggleHighlight=verse=>setHighlights(prev=>prev.includes(currentRef+":"+verse)?prev.filter(x=>x!==currentRef+":"+verse):[...prev,currentRef+":"+verse]);
+  const cleanupKokoroAudio=()=>{
+    kokoroAudioRef.current?.pause?.();
+    if(kokoroUrlRef.current)URL.revokeObjectURL(kokoroUrlRef.current);
+    kokoroAudioRef.current=null;kokoroUrlRef.current="";
+  };
   const stopReading=()=>{
     readingRunRef.current++;
-    queueRef.current=[];
-    queueIndexRef.current=0;
+    queueRef.current=[];queueIndexRef.current=0;
     window.speechSynthesis?.cancel();
+    cleanupKokoroAudio();
     setReadingVerse(null);setReadingWord(-1);setReadingState("stopped");
   };
-  const pauseReading=()=>{if(window.speechSynthesis?.speaking){window.speechSynthesis.pause();setReadingState("paused");}};
-  const resumeReading=()=>{if(window.speechSynthesis?.paused){window.speechSynthesis.resume();setReadingState("playing");}};
-  const playQueueItem=(runId)=>{
+  const pauseReading=()=>{
+    if(voiceEngine==="neural"){
+      if(kokoroAudioRef.current){kokoroAudioRef.current.pause();setReadingState("paused");}
+      return;
+    }
+    if(window.speechSynthesis?.speaking){window.speechSynthesis.pause();setReadingState("paused");}
+  };
+  const resumeReading=()=>{
+    if(voiceEngine==="neural"){
+      if(kokoroAudioRef.current){kokoroAudioRef.current.play().then(()=>setReadingState("playing")).catch(()=>{});}
+      return;
+    }
+    if(window.speechSynthesis?.paused){window.speechSynthesis.resume();setReadingState("playing");}
+  };
+  const buildQueue=()=>{const next=[];passage.forEach(v=>{const parts=v.text.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[v.text];let startWord=0;parts.map(p=>p.trim()).filter(Boolean).forEach(text=>{next.push({verse:v.verse,text,startWord});startWord+=text.split(/\s+/).filter(Boolean).length;});});return next;};
+  const playBrowserItem=(runId)=>{
     if(runId!==readingRunRef.current)return;
     const item=queueRef.current[queueIndexRef.current];
     if(!item){setReadingVerse(null);setReadingWord(-1);setReadingState("finished");return;}
     setReadingVerse(item.verse);setReadingWord(item.startWord);
-    const utterance=new SpeechSynthesisUtterance(item.text);
-    const voice=voices.find(v=>(v.voiceURI||v.name)===voiceURI)||pickNaturalVoice(voices);
-    if(voice)utterance.voice=voice;
+    const utterance=new SpeechSynthesisUtterance(item.text);const voice=browserVoices.find(v=>(v.voiceURI||v.name)===browserVoiceURI)||pickNaturalVoice(browserVoices);if(voice)utterance.voice=voice;
     utterance.rate=0.84;utterance.pitch=1;utterance.volume=1;
-    utterance.onboundary=(event)=>{
-      if(runId!==readingRunRef.current||typeof event.charIndex!=="number")return;
-      const before=item.text.slice(0,event.charIndex).trim();
-      const localWord=before?before.split(/\\s+/).filter(Boolean).length-1:0;
-      setReadingWord(item.startWord+Math.max(0,localWord));
-    };
-    utterance.onend=()=>{
-      if(runId!==readingRunRef.current)return;
-      queueIndexRef.current++;
-      window.setTimeout(()=>playQueueItem(runId),520);
-    };
-    utterance.onerror=()=>{
-      if(runId===readingRunRef.current){setReadingVerse(null);setReadingWord(-1);setReadingState("stopped");}
-    };
+    utterance.onboundary=(event)=>{if(runId!==readingRunRef.current||typeof event.charIndex!=="number")return;const before=item.text.slice(0,event.charIndex).trim();const localWord=before?before.split(/\s+/).filter(Boolean).length-1:0;setReadingWord(item.startWord+Math.max(0,localWord));};
+    utterance.onend=()=>{if(runId!==readingRunRef.current)return;queueIndexRef.current++;window.setTimeout(()=>playBrowserItem(runId),520);};
+    utterance.onerror=()=>{if(runId===readingRunRef.current){setReadingVerse(null);setReadingWord(-1);setReadingState("stopped");}};
     window.speechSynthesis.speak(utterance);
   };
-  const listen=()=>{
-    if(!("speechSynthesis" in window)){notify("Audio unavailable","This browser does not provide speech playback.");return;}
-    stopReading();
-    const next=[];
-    passage.forEach(v=>{
-      const parts=v.text.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[v.text];
-      let startWord=0;
-      parts.map(p=>p.trim()).filter(Boolean).forEach(text=>{
-        next.push({verse:v.verse,text,startWord});
-        startWord+=text.split(/\\s+/).filter(Boolean).length;
-      });
-    });
-    if(!next.length)return;
-    queueRef.current=next;
-    queueIndexRef.current=0;
-    const runId=++readingRunRef.current;
-    setReadingState("playing");
-    setAudio(a=>({...a,voice:true}));
-    notify("Audio Bible playing","Use Pause, Resume, or Stop at any time. The reader now pauses naturally between sentences and verses.");
-    playQueueItem(runId);
+  const loadNeuralVoice=async()=>{
+    if(kokoroRef.current){setVoiceEngine("neural");return true;}
+    setNeuralStatus("loading");setNeuralError("");notify("Loading natural voice","The local neural voice is loading in your browser. First use can take a little while.");
+    try{
+      const module=await import("https://esm.run/kokoro-js@1.2.1");
+      const {KokoroTTS}=module;
+      const device=navigator.gpu?"webgpu":"wasm";
+      const tts=await KokoroTTS.from_pretrained("onnx-community/Kokoro-82M-v1.0-ONNX",{dtype:"q8",device});
+      kokoroRef.current=tts;
+      const entries=Object.entries(tts.voices||{});
+      const english=entries.filter(([id])=>/^[ab][fm]_/.test(id));
+      const next=english.map(([id,meta])=>({id,name:meta?.name||id,traits:meta?.traits||""}));
+      setNeuralVoices(next);if(next.length&&!next.some(v=>v.id===neuralVoice))setNeuralVoice(next[0].id);
+      setNeuralStatus("ready");setVoiceEngine("neural");setNeuralError("");notify("Natural voice ready","The reader is now using a local neural voice with pause, resume, stop, and word highlighting.");
+      return true;
+    }catch(err){
+      kokoroRef.current=null;setNeuralStatus("error");setNeuralError(String(err?.message||err).slice(0,180));setVoiceEngine("browser");notify("Natural voice unavailable","Falling back to your browser voice. You can still choose an installed voice below.");return false;
+    }
+  };
+  const playKokoroItem=async(runId)=>{
+    if(runId!==readingRunRef.current)return;
+    const item=queueRef.current[queueIndexRef.current];
+    const tts=kokoroRef.current;
+    if(!item||!tts){if(!item){setReadingVerse(null);setReadingWord(-1);setReadingState("finished");}return;}
+    setReadingVerse(item.verse);setReadingWord(item.startWord);setReadingState("playing");
+    try{
+      const raw=await tts.generate(item.text,{voice:neuralVoice||"af_heart",speed:.92});
+      if(runId!==readingRunRef.current)return;
+      cleanupKokoroAudio();
+      const url=URL.createObjectURL(raw.toBlob());const player=new Audio(url);player.preload="auto";kokoroUrlRef.current=url;kokoroAudioRef.current=player;
+      player.ontimeupdate=()=>{if(runId!==readingRunRef.current||!player.duration)return;const words=item.text.split(/\s+/).filter(Boolean).length;setReadingWord(item.startWord+Math.min(words-1,Math.max(0,Math.floor((player.currentTime/player.duration)*words))));};
+      player.onended=()=>{if(runId!==readingRunRef.current)return;cleanupKokoroAudio();queueIndexRef.current++;window.setTimeout(()=>playKokoroItem(runId),650);};
+      player.onerror=()=>{if(runId===readingRunRef.current){cleanupKokoroAudio();setReadingState("stopped");setVoiceEngine("browser");notify("Natural voice playback failed","Switching back to the browser voice.");playBrowserItem(runId);}};
+      await player.play();
+    }catch(err){
+      if(runId!==readingRunRef.current)return;
+      cleanupKokoroAudio();setReadingState("stopped");setVoiceEngine("browser");notify("Natural voice playback failed","Switching back to the browser voice.");
+      playBrowserItem(runId);
+    }
+  };
+  const listen=async()=>{
+    if(!("speechSynthesis" in window)&&!kokoroRef.current){notify("Audio unavailable","This browser does not provide speech playback.");return;}
+    stopReading();const next=buildQueue();if(!next.length)return;queueRef.current=next;queueIndexRef.current=0;const runId=++readingRunRef.current;setAudio(a=>({...a,voice:true}));
+    if(voiceEngine==="neural"){
+      const ready=kokoroRef.current||await loadNeuralVoice();
+      if(runId!==readingRunRef.current)return;
+      if(ready){setReadingState("playing");notify("Natural audio Bible playing","Kokoro neural voice is reading with natural sentence pauses and live word highlighting.");await playKokoroItem(runId);return;}
+    }
+    setReadingState("playing");notify("Audio Bible playing","Browser voice with sentence pauses and live word highlighting.");playBrowserItem(runId);
   };
   const saveRef=ref=>{const v=dailyVerses.find(x=>x.ref===ref)||{ref,text:"Saved reference: "+ref};setSavedVerses(prev=>prev.some(x=>x.ref===ref)?prev:[v,...prev]);};
-  const voiceLabel=readingState==="playing"?"Playing":readingState==="paused"?"Paused":readingState==="finished"?"Finished":"Ready";
-  return <div className="page"><PageTitle eyebrow="SCRIPTURE" title="The Bible" text="Read, search, compare, highlight, listen, take notes, and move into deeper study." action={<div className="reader-actions"><button className="primary-btn" onClick={listen}>{readingState==="playing"?"↻ Restart":"▶ Listen"}</button><button className="ghost-btn" onClick={readingState==="paused"?resumeReading:pauseReading} disabled={!window.speechSynthesis?.speaking}>{readingState==="paused"?"▶ Resume":"Ⅱ Pause"}</button><button className="ghost-btn" onClick={stopReading} disabled={!window.speechSynthesis?.speaking&&!readingVerse}>■ Stop</button></div>}/>
+  const voiceLabel=voiceEngine==="neural"?(neuralStatus==="ready"?"Kokoro • "+(neuralVoices.find(v=>v.id===neuralVoice)?.name||neuralVoice):"Natural neural voice"):browserVoices.find(v=>(v.voiceURI||v.name)===browserVoiceURI)?.name||"Best browser voice";
+  const isPlaying=readingState==="playing";const isPaused=readingState==="paused";
+  return <div className="page"><PageTitle eyebrow="SCRIPTURE" title="The Bible" text="Read, search, compare, highlight, listen, take notes, and move into deeper study." action={<div className="reader-actions"><button className="primary-btn" onClick={listen}>{isPlaying?"↻ Restart":"▶ Listen"}</button><button className="ghost-btn" onClick={isPaused?resumeReading:pauseReading} disabled={!isPlaying&&!isPaused}>{isPaused?"▶ Resume":"Ⅱ Pause"}</button><button className="ghost-btn" onClick={stopReading} disabled={readingState==="stopped"||readingState==="finished"}>■ Stop</button></div>}/>
     <div className="bible-toolbar"><select value={book} onChange={e=>{const value=e.target.value;const nextBook=books.find(b=>b[0]===value);stopReading();setBook(value);setChapter("1");setTranslationTab(nextBook?.[3]==="apocrypha"?"kjv":"side");}}><optgroup label="Standard Bible">{books.filter(b=>b[3]!=="apocrypha").map(b=><option key={b[0]} value={b[0]}>{b[0]}</option>)}</optgroup><optgroup label="Deuterocanon & Apocrypha">{books.filter(b=>b[3]==="apocrypha").map(b=><option key={b[0]} value={b[0]}>{b[0]}</option>)}</optgroup></select><select value={chapter} onChange={e=>{stopReading();setChapter(e.target.value);}}>{Array.from({length:selected[2]},(_,i)=><option key={i+1}>{i+1}</option>)}</select>{selected[3]==="apocrypha"?<div className="translation-tabs"><span className="extended-source-label">1611 Apocrypha</span></div>:<div className="translation-tabs"><button className={translationTab==="side"?"active":""} onClick={()=>setTranslationTab("side")}>Side by side</button><button className={translationTab==="kjv"?"active":""} onClick={()=>setTranslationTab("kjv")}>KJV</button><button className={translationTab==="web"?"active":""} onClick={()=>setTranslationTab("web")}>WEB</button></div>}</div>
     <div className="bible-toolbar-note">{selected[3]==="apocrypha"?bibleBookNotes.apocrypha:"KJV + WEB are loaded from the current public Scripture source where available."}</div>
-    <div className="audio-reader-bar"><div><span className="eyebrow">SCRIPTURE AUDIO</span><strong>{currentRef} • {voiceLabel}</strong><small>Free browser voice. Choose the best installed English voice for your device.</small></div><div className="audio-reader-controls"><label><span>Voice</span><select value={voiceURI} onChange={e=>setVoiceURI(e.target.value)} disabled={!voices.length}><option value="">Best available voice</option>{voices.map(v=><option key={v.voiceURI||v.name} value={v.voiceURI||v.name}>{v.name} {v.localService===false?"• online":""}</option>)}</select></label><button className="ghost-btn" onClick={readingState==="paused"?resumeReading:pauseReading} disabled={!window.speechSynthesis?.speaking}>{readingState==="paused"?"▶ Resume":"Ⅱ Pause"}</button><button className="ghost-btn" onClick={stopReading}>■ Stop</button></div></div>
+    <div className="audio-reader-bar"><div><span className="eyebrow">SCRIPTURE AUDIO</span><strong>{currentRef} • {readingState==="playing"?"Playing":readingState==="paused"?"Paused":readingState==="finished"?"Finished":"Ready"}</strong><small>{voiceLabel} • Natural neural voice is processed locally in your browser; browser voice is the fallback.</small></div><div className="audio-reader-controls"><div className="voice-engine-toggle"><button className={voiceEngine==="neural"?"active":""} onClick={()=>{setVoiceEngine("neural");if(!kokoroRef.current)loadNeuralVoice();}}>Natural neural</button><button className={voiceEngine==="browser"?"active":""} onClick={()=>setVoiceEngine("browser")}>Device voice</button></div>{voiceEngine==="neural"&&neuralVoices.length>0&&<label><span>Natural voice</span><select value={neuralVoice} onChange={e=>setNeuralVoice(e.target.value)}>{neuralVoices.map(v=><option key={v.id} value={v.id}>{v.name}{v.traits?" • "+v.traits:""}</option>)}</select></label>}{voiceEngine==="browser"&&<label><span>Device voice</span><select value={browserVoiceURI} onChange={e=>setBrowserVoiceURI(e.target.value)} disabled={!browserVoices.length}><option value="">Best available voice</option>{browserVoices.map(v=><option key={v.voiceURI||v.name} value={v.voiceURI||v.name}>{v.name}</option>)}</select></label>}<button className="ghost-btn" onClick={isPaused?resumeReading:pauseReading} disabled={!isPlaying&&!isPaused}>{isPaused?"▶ Resume":"Ⅱ Pause"}</button><button className="ghost-btn" onClick={stopReading} disabled={readingState==="stopped"||readingState==="finished"}>■ Stop</button></div></div>
+    {neuralStatus==="error"&&<div className="ai-error"><span>Natural voice couldn't load on this device.</span>{neuralError&&<small>{neuralError}</small>}<button className="text-btn" onClick={loadNeuralVoice}>Try natural voice again</button></div>}
     <div className="bible-layout"><div className="scripture-panel"><div className="panel-kicker">{currentRef}</div><h2>{currentRef}</h2><div className="scripture-lines">{loading?<p className="loading-line">Loading Scripture…</p>:filtered.length?filtered.map(v=><p key={v.verse} className={query?"search-hit":""} onClick={()=>toggleHighlight(v.verse)}><sup>{v.verse}</sup> <span className={highlights.includes(currentRef+":"+v.verse)?"highlighted-text":""}>{readingVerse===v.verse?renderSpeechText(v.text,true,readingWord):v.text}</span></p>):<div className="empty-state">No verses here match “{query}”.</div>}</div><div className="scripture-tools"><button onClick={()=>{const v=prompt("Type a note for this chapter");if(v){setNotes(prev=>[{id:Date.now(),ref:currentRef,text:v},...prev]);notify("Note saved","Added to your private Bible notes.");}}}>✎ Note</button><button onClick={()=>{filtered.forEach(v=>toggleHighlight(v.verse));notify("Highlight updated","Tap any verse to toggle individual highlights.");}}>🖍 Highlight</button><button onClick={()=>{setTranslationTab("side");notify("Side-by-side open","KJV and WEB are shown together where the source is available.");}}>⇄ Compare</button><button onClick={()=>notify("Cross-references open","Use the Study tab for the full reference explorer.")}>↗ Cross-references</button><button onClick={()=>notify("Study mode","Use the Study Assistant for guided questions and context.")}>▦ Study</button><button onClick={()=>go("assistant")}>✧ Ask Bible Guide</button></div></div>
       <div className="study-side"><div className="side-card"><div className="side-card-head"><strong>Search</strong><span>{filtered.length}</span></div><div className="compact-search"><span>⌕</span><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search this chapter..."/></div></div>
         {translationTab==="side"&&<div className="side-card"><div className="side-card-head"><strong>Translation comparison</strong><span>KJV / WEB</span></div><div className="translation-compare"><div><b>KJV</b>{passage.slice(0,6).map(v=><p key={"k"+v.verse}><sup>{v.verse}</sup>{v.text}</p>)}</div><div><b>WEB</b>{(webPassage.length?webPassage:passage).slice(0,6).map(v=><p key={"w"+v.verse}><sup>{v.verse}</sup>{v.text}</p>)}</div></div></div>}
