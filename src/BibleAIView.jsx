@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState } from "react";
 import { books, crossRefs, dailyVerses, lexicon, parables, studyBooks, teachings } from "./data";
 
-const MODEL_ID = "Qwen3-0.6B-q4f16_1-MLC";
+const MODEL_ID = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
 const MODEL_CDN = "https://esm.run/@mlc-ai/web-llm@0.2.85";
 
 const escapeRegExp = (value) => value
@@ -173,7 +173,7 @@ export default function BibleAIView({ verse, go }) {
         }
       });
       engineRef.current = engine;
-      setProvider("WebLLM • Qwen3 0.6B");
+      setProvider("WebLLM • Llama 3.2 1B");
       setStatus("ready");
       setStatusText("AI ready • local browser model • no API key");
     } catch (err) {
@@ -283,7 +283,7 @@ export default function BibleAIView({ verse, go }) {
       </section>
     </div>
 
-    <div className="ai-note"><strong>How it works:</strong> the first run may download a browser model. WebLLM runs the language model in the browser using WebGPU, while supported Chrome devices can use Chrome's own on-device Prompt API. No OpenAI, Gemini, Claude, or other paid API key is used. Model: Qwen3 0.6B via WebLLM.</div>
+    <div className="ai-note"><strong>How it works:</strong> the first run may download a browser model. WebLLM runs the language model in the browser using WebGPU, while supported Chrome devices can use Chrome's own on-device Prompt API. No OpenAI, Gemini, Claude, or other paid API key is used. Model: Llama 3.2 1B via WebLLM.</div>
     <div className="ai-actions"><button className="ghost-btn" onClick={() => go("bible")}>Open Bible reader</button><button className="ghost-btn" onClick={() => go("study")}>Open study tools</button></div>
   </div>;
 }
