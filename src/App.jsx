@@ -192,7 +192,7 @@ export default function App(){
       </header>
       <div className="content">
         {view==="home"&&<HomeView user={user} verse={currentVerse} saved={savedVerses.some(v=>v.ref===currentVerse.ref)} onSave={saveVerse} go={go} completed={completed} stats={stats} onNeedHelp={need=>{setQuickSession(need);go("assistant");}} notify={notify}/>}
-        {view==="bible"&&<BibleView initialSearch={search} savedVerses={savedVerses} setSavedVerses={setSavedVerses} notes={notes} setNotes={setNotes} highlights={highlights} setHighlights={setHighlights} audio={audio} setAudio={setAudio} stats={stats} setStats={setStats} markActivity={markActivity} notify={notify}/>}
+        {view==="bible"&&<BibleView initialSearch={search} savedVerses={savedVerses} setSavedVerses={setSavedVerses} notes={notes} setNotes={setNotes} highlights={highlights} setHighlights={setHighlights} audio={audio} setAudio={setAudio} stats={stats} setStats={setStats} markActivity={markActivity} notify={notify} go={go}/>} 
         {view==="study"&&<StudyView go={go} notify={notify}/>}
         {view==="plans"&&<PlansView planProgress={planProgress} setPlanProgress={setPlanProgress} markActivity={markActivity} notify={notify}/>}
         {view==="prayer"&&<PrayerView prayers={prayers} setPrayers={setPrayers} answered={answeredPrayers} setAnswered={setAnsweredPrayers} categories={prayerCategories} setCategories={setPrayerCategories} markActivity={markActivity} notify={notify}/>}
