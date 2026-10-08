@@ -88,6 +88,10 @@
       })();
     </script>
 
-    <script type="module" src="./src/main.jsx"></script>
+    <script type="module">
+      import("./src/main.jsx").catch((error) => {
+        console.warn("The primary Vite module was unavailable; using the static fallback.", error);
+      });
+    </script>
   </body>
 </html>
