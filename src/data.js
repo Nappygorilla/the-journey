@@ -64,7 +64,7 @@ export const defaultCommunity=[{id:1,name:"Maya",role:"member",time:"3h",text:"I
 export const moods=["Peaceful","Happy","Grateful","Tired","Stressed","Anxious","Sad","Angry","Confused","Hopeful"];
 export const needs=["Scripture","Prayer","Understanding","Encouragement","Reflection"];
 export const languagePack={
-en:{home:"Home",bible:"Bible",study:"Study",plans:"Plans",prayer:"Prayer",games:"Games",devotionals:"Devotionals",community:"Community",journey:"My Journey",growth:"Growth",assistant:"Study Assistant",more:"More",settings:"Settings",signout:"Sign out"},
+en:{home:"Home",bible:"Bible",study:"Study",plans:"Plans",prayer:"Prayer",games:"Games",devotionals:"Devotionals",community:"Community",journey:"My Journey",growth:"Growth",assistant:"Bible AI",more:"More",settings:"Settings",signout:"Sign out"},
 es:{home:"Inicio",bible:"Biblia",study:"Estudio",plans:"Planes",prayer:"Oración",games:"Juegos",devotionals:"Devocionales",community:"Comunidad",journey:"Mi Camino",growth:"Crecimiento",assistant:"Asistente de estudio",more:"Más",settings:"Ajustes",signout:"Cerrar sesión"},
 fr:{home:"Accueil",bible:"Bible",study:"Étude",plans:"Plans",prayer:"Prière",games:"Jeux",devotionals:"Dévotionnels",community:"Communauté",journey:"Mon chemin",growth:"Croissance",assistant:"Assistant d'étude",more:"Plus",settings:"Réglages",signout:"Déconnexion"},
 pt:{home:"Início",bible:"Bíblia",study:"Estudo",plans:"Planos",prayer:"Oração",games:"Jogos",devotionals:"Devocionais",community:"Comunidade",journey:"Minha jornada",growth:"Crescimento",assistant:"Assistente de estudo",more:"Mais",settings:"Configurações",signout:"Sair"},
