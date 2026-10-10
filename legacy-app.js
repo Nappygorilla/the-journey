@@ -1,4 +1,5 @@
 // Generated branch fallback bundle.
+const { useEffect, useMemo, useRef, useState } = React;
 
 const struggles=["Anxiety / worry","Fear","Anger","Temptation","Self-control","Forgiveness","Loneliness","Grief","Doubt","Relationships","Pride","Jealousy","Finding purpose","Growing closer to God","Stress","Guilt","Patience","Comparison","Discouragement","Habits","School pressure","Family tension"];
 const navItems=[["home","Home","⌂"],["bible","Bible","✦"],["study","Study","▦"],["plans","Plans","◷"],["prayer","Prayer","♡"],["games","Games","⌁"],["devotionals","Devotionals","☼"],["community","Community","◉"],["journey","My Journey","♧"],["growth","Growth","↗"],["assistant","Bible AI","✧"],["more","More","＋"]];
