@@ -41,6 +41,9 @@ const legacy = await readFile("legacy-app.js", "utf8");
 if (/^\s*import\b/m.test(legacy)) failures.push("legacy-app.js contains an ES module import");
 if (/^\s*export\b/m.test(legacy)) failures.push("legacy-app.js contains an ES module export");
 if (!legacy.includes("ReactDOM.createRoot")) failures.push("legacy-app.js has no React boot call");
+if (!legacy.includes("const { useEffect, useMemo, useRef, useState } = React;")) {
+  failures.push("legacy-app.js is missing React hook bindings required by its import-free fallback build");
+}
 
 if (failures.length) {
   console.error(failures.join("\n"));
