@@ -677,3 +677,21 @@ h1,h2,h3,h4{letter-spacing:-.035em}
   color:#f0dba2;
 }
 .app-shell .main .ai-input-foot{color:#b3bfb3}
+
+
+/* Contrast guardrails: badges stay on dark surfaces; field hints use margin
+   above the WCAG AA minimum rather than sitting on the 4.5:1 edge. */
+.app-shell .main .day-pill,
+.app-shell .main .path-badge{
+  color:#f0dba2;
+  background:rgba(215,187,120,.09);
+  border-color:rgba(215,187,120,.23);
+}
+.app-shell .main input::placeholder,
+.app-shell .main textarea::placeholder{
+  color:#58685a;
+}
+.app-shell .main .ai-input::placeholder,
+.app-shell .main .compact-input::placeholder{
+  color:#58685a!important;
+}
