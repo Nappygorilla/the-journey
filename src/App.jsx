@@ -186,7 +186,7 @@ export default function App(){
     <aside className={"sidebar "+(mobileOpen?"open":"")}>
       <div className="brand-block"><div className="brand-mark">✝</div><div><div className="brand-name">The Journey</div><div className="brand-tag">Scripture • Prayer • Growth</div></div></div>
       <div className="sidebar-label">Explore</div>
-      <nav>{navItems.map(([id,label,icon])=><button key={id} className={"nav-item "+(view===id?"active":"")} onClick={()=>go(id)}><span className="nav-icon">{icon}</span><span>{languagePack[preferences.language]?.[id]||label}</span></button>)}</nav>
+      <nav id="primary-navigation">{navItems.map(([id,label,icon])=><button key={id} className={"nav-item "+(view===id?"active":"")} onClick={()=>go(id)}><span className="nav-icon">{icon}</span><span>{languagePack[preferences.language]?.[id]||label}</span></button>)}</nav>
       <div className="sidebar-bottom">
         <div className="mini-card"><div className="mini-title">Journey streak</div><div className="mini-value">{stats.streak} days <span>✦</span></div><div className="progress"><div style={{width:Math.min(100,stats.streak*10)+"%"}}/></div><div className="muted">Progress is about your practice, not your worth.</div></div>
         <button className="nav-item" onClick={()=>go("settings")}><span className="nav-icon">⚙</span><span>{languagePack[preferences.language]?.settings||"Settings"}</span></button>
@@ -195,8 +195,8 @@ export default function App(){
     </aside>
     <main className="main">
       <header className="topbar">
-        <button className="mobile-menu" onClick={()=>setMobileOpen(v=>!v)}>☰</button>
-        <div className="search-wrap"><span>⌕</span><input value={search} onChange={e=>setSearch(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")go("bible");}} placeholder="Search Scripture, topics, studies..."/></div>
+        <button className="mobile-menu" aria-label={mobileOpen?"Close navigation menu":"Open navigation menu"} aria-expanded={mobileOpen} aria-controls="primary-navigation" onClick={()=>setMobileOpen(v=>!v)}>☰</button>
+        <div className="search-wrap"><span aria-hidden="true">⌕</span><input aria-label="Search Scripture, topics, and studies" value={search} onChange={e=>setSearch(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")go("bible");}} placeholder="Search Scripture, topics, studies..."/></div>
         <div className="top-actions"><button className="icon-btn" onClick={()=>setShowNotifications(v=>!v)} aria-label="Notifications">♧{unreadCount>0&&<span className="notification-dot">{unreadCount}</span>}</button><button className="profile-chip" onClick={()=>go("journey")}><span className="avatar">{(user.name||"J")[0].toUpperCase()}</span><span className="profile-copy"><strong>{user.name}</strong><span>On your journey</span></span></button></div>
         {showNotifications&&<NotificationPanel notifications={notifications} setNotifications={setNotifications}/>}
       </header>
@@ -217,7 +217,7 @@ export default function App(){
         {view==="audit"&&<FeatureAuditView go={go}/>}
       </div>
     </main>
-    {toast&&<div className="toast"><span>✦</span>{toast}</div>}
+    {toast&&<div className="toast" role="status" aria-live="polite"><span aria-hidden="true">✦</span>{toast}</div>}
   </div>;
 }
 
@@ -256,7 +256,7 @@ function AuthScreen({mode,setMode,error,setError,onSuccess}){
     </section>
     <div className="auth-card">
     <div className="auth-brand"><div className="brand-mark large">✝</div><div><div className="brand-name">The Journey</div><div className="brand-tag">Grow in faith. Grow in Scripture.</div></div></div>
-    <div className="auth-heading">{mode==="login"?"Welcome back.":"Begin your journey."}</div><p className="auth-sub">{mode==="login"?"Pick up where you left off.":"A completely free space for Scripture, prayer, learning, and growth."}</p>
+    <h2 className="auth-heading">{mode==="login"?"Welcome back.":"Begin your journey."}</h2><p className="auth-sub">{mode==="login"?"Pick up where you left off.":"A completely free space for Scripture, prayer, learning, and growth."}</p>
     <form onSubmit={submit} className="auth-form">{mode==="register"&&<label>Name<input value={name} onChange={e=>setName(e.target.value)} placeholder="Your name"/></label>}<label>Email<input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/></label><label>Password<div className="password-wrap"><input type={showPassword?"text":"password"} value={password} onChange={e=>setPassword(e.target.value)} placeholder="At least 6 characters"/><button type="button" onClick={()=>setShowPassword(v=>!v)}>{showPassword?"Hide":"Show"}</button></div></label>{error&&<div className="form-error">{error}</div>}<button disabled={busy} className="primary-btn wide">{busy?"Opening…":mode==="login"?"Enter The Journey":"Create Free Account"} <span>→</span></button></form>
     <div className="auth-divider"><span>100% free</span></div><button className="auth-switch" onClick={()=>{setError("");setMode(mode==="login"?"register":"login");}}>{mode==="login"?"New here? Create your free account":"Already have an account? Sign in"}</button>
     <div className="auth-note">This early build keeps account data on this device. Production accounts need a real secure backend.</div>
