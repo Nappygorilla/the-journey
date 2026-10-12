@@ -71,9 +71,33 @@ try {
   if (bodyText.includes("Loading your Scripture and faith tools…")) {
     throw new Error("Fallback remained on the loading screen.");
   }
-  if (errors.length) throw new Error("Fallback browser errors:\n" + errors.join("\n"));
+  if (errors.length) throw new Error("Fallback browser errors:\\n" + errors.join("\\n"));
 
-  console.log("Branch fallback smoke test passed.");
+  // Open a clean browser context to check the logged-out welcome screen too.
+  const authPage = await browser.newPage();
+  const authErrors = [];
+  authPage.on("pageerror", error => authErrors.push("pageerror: " + error.message));
+  authPage.on("console", msg => {
+    if (msg.type() === "error") authErrors.push("console: " + msg.text());
+  });
+  const authResponse = await authPage.goto(
+    "http://127.0.0.1:" + port + prefix + "/",
+    { waitUntil: "domcontentloaded" }
+  );
+  if (!authResponse?.ok()) throw new Error("Logged-out fallback returned HTTP " + authResponse?.status());
+  await authPage.waitForTimeout(2600);
+  await authPage.setViewportSize({ width: 390, height: 844 });
+  const authText = await authPage.locator("body").innerText();
+  if (!authText.includes("Make room for") || !authText.includes("Jesus Christ is King and Lord.")) {
+    throw new Error("Redesigned fallback welcome screen is missing expected content. Visible text:\\n" + authText.slice(0, 1600));
+  }
+  if (!(await authPage.locator(".auth-showcase").isVisible())) throw new Error("Fallback welcome showcase is not visible.");
+  const authOverflow = await authPage.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
+  if (authOverflow) throw new Error("Fallback welcome screen overflows horizontally at 390px.");
+  if (authErrors.length) throw new Error("Welcome fallback browser errors:\\n" + authErrors.join("\\n"));
+  await authPage.close();
+
+  console.log("Branch fallback smoke test passed for the dashboard and redesigned mobile welcome screen.");
   console.log("Rendered characters:", bodyText.trim().length);
 } finally {
   await browser?.close().catch(() => {});
