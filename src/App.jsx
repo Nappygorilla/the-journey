@@ -237,7 +237,24 @@ function AuthScreen({mode,setMode,error,setError,onSuccess}){
     if(existing&&existing.email===normalized){setBusy(false);return setError("An account already exists on this device. Sign in instead.");}
     const next={name:name.trim()||normalized.split("@")[0],email:normalized};localStorage.setItem("journey_account",JSON.stringify({...next,passwordHash:hash}));onSuccess(next);
   };
-  return <div className="auth-page"><div className="auth-glow glow-a"/><div className="auth-glow glow-b"/><div className="auth-card">
+  return <div className="auth-page"><div className="auth-glow glow-a"/><div className="auth-glow glow-b"/>
+    <section className="auth-showcase">
+      <div className="showcase-topline"><span className="showcase-spark">✦</span><span>THE JOURNEY</span><span className="showcase-topline-rule"/></div>
+      <div className="showcase-copy">
+        <span className="eyebrow">A QUIET PLACE TO GROW</span>
+        <h1>Make room for <em>what matters most.</em></h1>
+        <p>Return to Scripture. Make space for prayer. Build a faith rhythm that meets you in real life.</p>
+        <div className="showcase-confession"><span className="confession-cross">✝</span><div><strong>Jesus Christ is King and Lord.</strong><span>Let every day begin with truth, grace, and hope.</span></div></div>
+      </div>
+      <div className="showcase-verse-card">
+        <div className="showcase-verse-top"><span>WORDS TO CARRY WITH YOU</span><span className="showcase-verse-mark">✦</span></div>
+        <blockquote>“Be still, and know that I am God.”</blockquote>
+        <div className="showcase-verse-bottom"><span>PSALM 46:10</span><span className="verse-line"/></div>
+      </div>
+      <div className="showcase-footer"><span><i/> Scripture</span><span><i/> Prayer</span><span><i/> Growth</span><span className="showcase-free">Always free</span></div>
+      <div className="showcase-orbit orbit-one"/><div className="showcase-orbit orbit-two"/><div className="showcase-glow"/>
+    </section>
+    <div className="auth-card">
     <div className="auth-brand"><div className="brand-mark large">✝</div><div><div className="brand-name">The Journey</div><div className="brand-tag">Grow in faith. Grow in Scripture.</div></div></div>
     <div className="auth-heading">{mode==="login"?"Welcome back.":"Begin your journey."}</div><p className="auth-sub">{mode==="login"?"Pick up where you left off.":"A completely free space for Scripture, prayer, learning, and growth."}</p>
     <form onSubmit={submit} className="auth-form">{mode==="register"&&<label>Name<input value={name} onChange={e=>setName(e.target.value)} placeholder="Your name"/></label>}<label>Email<input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/></label><label>Password<div className="password-wrap"><input type={showPassword?"text":"password"} value={password} onChange={e=>setPassword(e.target.value)} placeholder="At least 6 characters"/><button type="button" onClick={()=>setShowPassword(v=>!v)}>{showPassword?"Hide":"Show"}</button></div></label>{error&&<div className="form-error">{error}</div>}<button disabled={busy} className="primary-btn wide">{busy?"Opening…":mode==="login"?"Enter The Journey":"Create Free Account"} <span>→</span></button></form>
