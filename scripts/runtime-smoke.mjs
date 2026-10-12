@@ -84,7 +84,28 @@ try {
   await checkScreen("Bible AI", "Bible Guide");
   await checkScreen("Games", "Bible Games");
 
-  console.log("Runtime smoke test passed for " + basePath + " and checked Bible, Bible AI, and Games.");
+  // Test the first impression without localStorage or an existing account.
+  const authPage = await browser.newPage();
+  const authErrors = [];
+  authPage.on("pageerror", error => authErrors.push(error.message));
+  authPage.on("console", msg => {
+    if (msg.type() === "error") authErrors.push(msg.text());
+  });
+  const authResponse = await authPage.goto("http://127.0.0.1:" + port + basePath, { waitUntil: "domcontentloaded" });
+  if (!authResponse?.ok()) throw new Error("Logged-out screen returned HTTP " + authResponse?.status());
+  await authPage.waitForTimeout(500);
+  await authPage.setViewportSize({ width: 390, height: 844 });
+  const authText = await authPage.locator("body").innerText();
+  if (!authText.includes("Make room for") || !authText.includes("Jesus Christ is King and Lord.")) {
+    throw new Error("Redesigned welcome screen is missing expected content. Visible text:\\n" + authText.slice(0, 1600));
+  }
+  if (!(await authPage.locator(".auth-showcase").isVisible())) throw new Error("Welcome showcase is not visible.");
+  const hasHorizontalOverflow = await authPage.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
+  if (hasHorizontalOverflow) throw new Error("Welcome screen overflows horizontally at 390px.");
+  if (authErrors.length) throw new Error("Welcome screen browser errors:\\n" + authErrors.join("\\n"));
+  await authPage.close();
+
+  console.log("Runtime smoke test passed for " + basePath + ", dashboard routes, and redesigned mobile welcome screen.");
   console.log("Visible text characters:", bodyText.trim().length);
 
   await browser.close();
