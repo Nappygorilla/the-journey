@@ -568,3 +568,6 @@ h1,h2,h3,h4{letter-spacing:-.035em}
 .ai-note,.ai-note p{color:#b3bfb3}
 .ai-message p{color:#c0cbc0}
 .page .empty-state,.page .empty-card small,.page .empty-card p{color:#b3bfb3}
+
+/* Semantic form heading keeps its visual spacing when rendered as an h2. */
+.auth-heading{margin:0}
