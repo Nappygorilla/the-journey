@@ -639,3 +639,41 @@ h1,h2,h3,h4{letter-spacing:-.035em}
   .app-shell,.auth-page,.onboarding-page{forced-color-adjust:auto}
   .primary-btn,.ghost-btn,.small-btn,.back-btn,.nav-item{border:1px solid ButtonText}
 }
+
+
+/* WCAG contrast repair for the Bible Guide conversation area.
+   This section had retained light card/bubble backgrounds from the old theme
+   while newer selectors correctly switched its text to light-on-dark. */
+.app-shell .main .ai-layout .panel-card{
+  background:linear-gradient(150deg,#111e16,#0b130e);
+  color:#edf1e8;
+  border-color:rgba(223,232,218,.12);
+}
+.app-shell .main .ai-layout .panel-card h3,
+.app-shell .main .ai-layout .panel-card .ai-chat-head h3{
+  color:#f1f0e6;
+}
+.app-shell .main .ai-layout .ai-starters button{
+  background:#17251b;
+  color:#d9e4d8;
+  border-color:rgba(223,232,218,.14);
+}
+.app-shell .main .ai-layout .ai-starters button:hover{
+  background:#263b29;
+  color:#fff;
+  border-color:rgba(215,187,120,.4);
+}
+.app-shell .main .ai-chat-head{border-bottom-color:rgba(223,232,218,.13)}
+.app-shell .main .ai-message{
+  background:#111e16;
+  color:#e5ece1;
+  border-color:rgba(223,232,218,.12);
+}
+.app-shell .main .ai-message.user{background:#203325}
+.app-shell .main .ai-message strong{color:#f0dba2}
+.app-shell .main .ai-message p{color:#c5d0c4}
+.app-shell .main .ai-avatar{
+  background:rgba(215,187,120,.14);
+  color:#f0dba2;
+}
+.app-shell .main .ai-input-foot{color:#b3bfb3}
