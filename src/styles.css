@@ -571,3 +571,6 @@ h1,h2,h3,h4{letter-spacing:-.035em}
 
 /* Semantic form heading keeps its visual spacing when rendered as an h2. */
 .auth-heading{margin:0}
+
+/* WCAG 2.2 target-size fix for password visibility toggle. */
+.auth-card .password-wrap button{min-height:44px;min-width:44px;align-self:stretch;display:grid;place-items:center;padding:0 12px}
