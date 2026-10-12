@@ -17,19 +17,28 @@ server.stderr.on("data", d => { output += d.toString(); });
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-const assertColorContrast = async (page, label) => {
-  const failures = await page.evaluate(async () => {
-    const report = await axe.run(document, { runOnly: { type: "rule", values: ["color-contrast"] } });
-    return report.violations.flatMap(violation => violation.nodes.map(node => ({
+const assertWcagAA = async (page, label) => {
+  const violations = await page.evaluate(async () => {
+    const report = await axe.run(document, {
+      runOnly: {
+        type: "tag",
+        values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]
+      }
+    });
+    return report.violations.map(violation => ({
       rule: violation.id,
-      target: node.target,
-      summary: node.failureSummary
-    })));
+      impact: violation.impact,
+      help: violation.help,
+      nodes: violation.nodes.map(node => ({
+        target: node.target,
+        summary: node.failureSummary
+      }))
+    }));
   });
-  if (failures.length) {
-    throw new Error("WCAG color-contrast failures on " + label + ":\n" + JSON.stringify(failures, null, 2));
+  if (violations.length) {
+    throw new Error("WCAG A/AA accessibility failures on " + label + ":\\n" + JSON.stringify(violations, null, 2));
   }
-  console.log("Color contrast passed:", label);
+  console.log("WCAG A/AA audit passed:", label);
 };
 
 
@@ -72,7 +81,7 @@ try {
 
   await page.waitForTimeout(1200);
   await page.addScriptTag({ path: resolve("node_modules/axe-core/axe.min.js") });
-  await assertColorContrast(page, "home dashboard");
+  await assertWcagAA(page, "home dashboard");
 
   const bodyText = await page.locator("body").innerText();
   const rootHtml = await page.locator("#root").innerHTML();
@@ -98,7 +107,7 @@ try {
     if (!text.includes(expectedText)) {
       throw new Error("Screen check failed for " + label + ": expected visible text " + expectedText + "\nVisible text:\n" + text.slice(0, 2000));
     }
-    await assertColorContrast(page, label);
+    await assertWcagAA(page, label);
   };
 
   await checkScreen("Bible", "The Bible");
@@ -117,7 +126,7 @@ try {
   await authPage.waitForTimeout(500);
   await authPage.setViewportSize({ width: 390, height: 844 });
   await authPage.addScriptTag({ path: resolve("node_modules/axe-core/axe.min.js") });
-  await assertColorContrast(authPage, "mobile logged-out welcome");
+  await assertWcagAA(authPage, "mobile logged-out welcome");
   const authText = await authPage.locator("body").innerText();
   if (!authText.includes("Make room for") || !authText.includes("Jesus Christ is King and Lord.")) {
     throw new Error("Redesigned welcome screen is missing expected content. Visible text:\\n" + authText.slice(0, 1600));
