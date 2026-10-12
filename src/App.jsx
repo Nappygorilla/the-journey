@@ -195,9 +195,9 @@ export default function App(){
     </aside>
     <main className="main">
       <header className="topbar">
-        <button className="mobile-menu" aria-label={mobileOpen?"Close navigation menu":"Open navigation menu"} aria-expanded={mobileOpen} aria-controls="primary-navigation" onClick={()=>setMobileOpen(v=>!v)}>☰</button>
+        <button className="mobile-menu" aria-label={mobileOpen?"Close navigation menu":"Open navigation menu"} aria-expanded={mobileOpen} aria-controls="primary-navigation" onClick={()=>setMobileOpen(v=>!v)}><span aria-hidden="true">☰</span></button>
         <div className="search-wrap"><span aria-hidden="true">⌕</span><input aria-label="Search Scripture, topics, and studies" value={search} onChange={e=>setSearch(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")go("bible");}} placeholder="Search Scripture, topics, studies..."/></div>
-        <div className="top-actions"><button className="icon-btn" onClick={()=>setShowNotifications(v=>!v)} aria-label="Notifications">♧{unreadCount>0&&<span className="notification-dot">{unreadCount}</span>}</button><button className="profile-chip" onClick={()=>go("journey")}><span className="avatar">{(user.name||"J")[0].toUpperCase()}</span><span className="profile-copy"><strong>{user.name}</strong><span>On your journey</span></span></button></div>
+        <div className="top-actions"><button className="icon-btn" onClick={()=>setShowNotifications(v=>!v)} aria-label={unreadCount>0?`Notifications, ${unreadCount} unread`:"Notifications"}><span aria-hidden="true">♧</span>{unreadCount>0&&<span className="notification-dot" aria-hidden="true">{unreadCount}</span>}</button><button className="profile-chip" onClick={()=>go("journey")}><span className="avatar">{(user.name||"J")[0].toUpperCase()}</span><span className="profile-copy"><strong>{user.name}</strong><span>On your journey</span></span></button></div>
         {showNotifications&&<NotificationPanel notifications={notifications} setNotifications={setNotifications}/>}
       </header>
       <div className="content">
