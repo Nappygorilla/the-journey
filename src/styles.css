@@ -1,5 +1,4 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap');
-500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
 
 :root{--bg:#06100c;--panel:#0c1713;--panel2:#101d18;--line:rgba(255,255,255,.08);--text:#f2f5f1;--muted:#93a099;--accent:#d5bb72;--accent2:#e6d390;--green:#8fbd91;--danger:#de8c8c;--shadow:0 18px 48px rgba(0,0,0,.24)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 50% -10%,#17251d 0,#06100c 34%,#06100c 100%);color:var(--text);font-family:"DM Sans",system-ui,sans-serif;min-height:100vh}button,input,textarea,select{font:inherit}button{cursor:pointer;color:inherit}a{text-decoration:none;color:inherit}
