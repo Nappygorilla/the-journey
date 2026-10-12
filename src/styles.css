@@ -574,3 +574,68 @@ h1,h2,h3,h4{letter-spacing:-.035em}
 
 /* WCAG 2.2 target-size fix for password visibility toggle. */
 .auth-card .password-wrap button{min-height:44px;min-width:44px;align-self:stretch;display:grid;place-items:center;padding:0 12px}
+
+
+/* FINAL THEME CONSISTENCY + CONTRAST PASS
+   The dashboard was inheriting a light paper background while several cards
+   and their copy had already moved to dark surfaces. Keep the authenticated
+   experience consistently deep evergreen; keep form fields intentionally light
+   with dark text for input readability. */
+.app-shell{
+  --bg:#070d0b;
+  --panel:#0c1511;
+  --panel2:#101c16;
+  --panel3:#14231b;
+  --line:rgba(223,232,218,.12);
+  --text:#f2f4ed;
+  --muted:#b3bfb3;
+  background:
+    radial-gradient(ellipse at 75% -10%,rgba(62,100,67,.18),transparent 42%),
+    radial-gradient(ellipse at 5% 35%,rgba(31,67,43,.12),transparent 36%),
+    #070d0b;
+  color:var(--text);
+}
+.app-shell .main{background:transparent;color:#f2f4ed}
+.app-shell .main h1,.app-shell .main h2,.app-shell .main h3,.app-shell .main h4,.app-shell .main h5,.app-shell .main h6{color:#f1f0e6}
+.app-shell .main p,.app-shell .main .muted,.app-shell .main small,.app-shell .main .page-title p,.app-shell .main .empty-state{color:#b3bfb3}
+.app-shell .main .eyebrow,.app-shell .main .sidebar-label{color:#c0cbbd}
+.app-shell .main .page-title h1,.app-shell .main .page-title h2,.app-shell .main .section-heading h2,.app-shell .main .section-heading h3{color:#f1f0e6}
+.app-shell .main .card-head h2,.app-shell .main .panel-card h3,.app-shell .main .side-card h3,.app-shell .main .settings-card h3,.app-shell .main .prayer-composer h2,.app-shell .main .prayer-card h3,.app-shell .main .game-shell h1,.app-shell .main .plan-card h3,.app-shell .main .game-card h3,.app-shell .main .devotional-card h3,.app-shell .main .community-side h3{color:#f1f0e6}
+.app-shell .main .profile-copy strong,.app-shell .main .stat-card strong,.app-shell .main .task-row strong,.app-shell .main .feature-card strong,.app-shell .main .verse-footer strong,.app-shell .main .reflection strong,.app-shell .main .audit-item strong{color:#edf1e8}
+.app-shell .main .profile-copy span,.app-shell .main .stat-card small,.app-shell .main .task-row small,.app-shell .main .feature-card small,.app-shell .main .verse-footer span,.app-shell .main .reflection p,.app-shell .main .audit-item small,.app-shell .main .audit-note{color:#b3bfb3}
+.app-shell .main .feature-card b,.app-shell .main .task-arrow,.app-shell .main .task-check{color:#b5c7b1}
+.app-shell .main .day-pill,.app-shell .main .path-badge,.app-shell .main .text-btn{color:#f0dba2}
+.app-shell .main .icon-btn{color:#edf1e8}
+.app-shell .main .profile-chip{background:rgba(255,255,255,.025);border-color:rgba(223,232,218,.10)}
+.app-shell .main .search-wrap{background:rgba(255,255,255,.035);border-color:rgba(223,232,218,.14)}
+.app-shell .main .search-wrap input{color:#f2f4ed!important}
+.app-shell .main .search-wrap input::placeholder{color:#b3bfb3!important}
+.app-shell .main input:not([type=checkbox]):not([type=radio]),.app-shell .main textarea,.app-shell .main select{background:#f8f9f2;color:#22372a;border-color:rgba(223,232,218,.18)}
+.app-shell .main input::placeholder,.app-shell .main textarea::placeholder{color:#667669}
+.app-shell .main .compact-input,.app-shell .main .ai-input{background:#f8f9f2!important;color:#22372a!important}
+.app-shell .main .ai-input::placeholder,.app-shell .main .compact-input::placeholder{color:#667669!important}
+.app-shell .main .bible-toolbar{background:linear-gradient(145deg,#111e16,#0b130e)}
+.app-shell .main .bible-toolbar select{background:#f8f9f2;color:#22372a}
+.app-shell .main .scripture-panel{background:linear-gradient(150deg,#111e16,#0b130e)}
+.app-shell .main .scripture-panel h2,.app-shell .main .scripture-lines p{color:#edf1e8}
+.app-shell .main .scripture-lines sup{color:#f0dba2}
+.app-shell .main .verse-card blockquote{color:#f1f0e6}
+.app-shell .main .post-card p,.app-shell .main .journal-entry p,.app-shell .main .output-text,.app-shell .main .ai-message p,.app-shell .main .scripture-lines p{color:#c5d0c4}
+.app-shell .main .ai-message strong,.app-shell .main .ai-note strong{color:#f0dba2}
+.app-shell .main .ai-note{background:rgba(255,255,255,.035);color:#b3bfb3}
+.app-shell .main .notification-panel{background:#101a14;color:#edf1e8;border-color:rgba(223,232,218,.14)}
+.app-shell .main .notification{color:#edf1e8}
+.app-shell .main .notification small,.app-shell .main .notification em,.app-shell .main .panel-head div span{color:#b3bfb3}
+.app-shell .main .audit-group,.app-shell .main .audit-item,.app-shell .main .audit-summary>div{background:linear-gradient(145deg,#111e16,#0b130e);color:#d8e0d5}
+.app-shell .main .audit-item{border-color:rgba(223,232,218,.12)}
+.app-shell .main .audit-note{background:rgba(215,187,120,.05);border-color:rgba(215,187,120,.16)}
+.app-shell .main .map-card .bible-map{background:radial-gradient(circle at 50% 30%,#203b29,#101d15)}
+.app-shell .main .map-point{color:#edf1e8}
+.app-shell .main .map-point em{color:#b3bfb3}
+.app-shell .main .ghost-btn,.app-shell .main .small-btn,.app-shell .main .back-btn{background:rgba(255,255,255,.035);color:#edf1e8;border-color:rgba(223,232,218,.16)}
+.app-shell .main .ghost-btn:hover,.app-shell .main .small-btn:hover,.app-shell .main .back-btn:hover{background:rgba(255,255,255,.08);color:#fff}
+.app-shell .main .primary-btn{color:#121910}
+@media(forced-colors:active){
+  .app-shell,.auth-page,.onboarding-page{forced-color-adjust:auto}
+  .primary-btn,.ghost-btn,.small-btn,.back-btn,.nav-item{border:1px solid ButtonText}
+}
