@@ -371,7 +371,7 @@ function BibleAIView({ verse, go }) {
         <div className="eyebrow">ASK SCRIPTURE</div>
         <h3>Your Bible question</h3>
         <div className="ai-starters">{starterPrompts.map((prompt) => <button key={prompt} onClick={() => setInput(prompt)}>{prompt}</button>)}</div>
-        <textarea className="ai-input" rows="5" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if ((e.ctrlKey || e.metaKey) && e.key === "Enter") send(); }} placeholder="Ask about Scripture, a Bible person, history, context, themes, or how two passages connect…"/>
+        <textarea className="ai-input" aria-label="Ask a Bible-study question" rows="5" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if ((e.ctrlKey || e.metaKey) && e.key === "Enter") send(); }} placeholder="Ask about Scripture, a Bible person, history, context, themes, or how two passages connect…"/>
         <div className="ai-input-foot"><span>Ctrl/Cmd + Enter to ask</span><div><button className="ghost-btn" onClick={clearChat}>New session</button><button className="primary-btn" disabled={busy || !input.trim()} onClick={() => send()}>Ask Bible Guide →</button></div></div>
       </section>
 
