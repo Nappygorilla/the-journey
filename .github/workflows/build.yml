@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: "journey-build-${{ github.sha }}"
+  group: "journey-build-${{ github.ref }}"
   cancel-in-progress: true
 
 jobs:
