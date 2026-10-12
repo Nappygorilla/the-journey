@@ -1,4 +1,5 @@
-// Generated branch fallback bundle.
+// Generated branch fallback bundle. Keep synchronized with src/ files.
+
 const { useEffect, useMemo, useRef, useState } = React;
 
 const struggles=["Anxiety / worry","Fear","Anger","Temptation","Self-control","Forgiveness","Loneliness","Grief","Doubt","Relationships","Pride","Jealousy","Finding purpose","Growing closer to God","Stress","Guilt","Patience","Comparison","Discouragement","Habits","School pressure","Family tension"];
@@ -201,7 +202,6 @@ function formatError(error) {
   if (/network|fetch|cdn|module/i.test(message)) return "The local AI package could not be loaded. Check your connection and try again.";
   return "The local Bible AI could not start on this device. " + message.slice(0, 180);
 }
-
 function BibleAIView({ verse, go }) {
   const engineRef = useRef(null);
   const nativeSessionRef = useRef(null);
@@ -461,7 +461,6 @@ function renderSpeechText(text,isActive,activeWord){
   });
 }
 function openExternal(url){window.open(url,"_blank","noopener,noreferrer");}
-
 function App(){
   const [user,setUser]=useState(()=>safeParse("journey_user",null));
   const [view,setView]=useState("home");
@@ -617,7 +616,24 @@ function AuthScreen({mode,setMode,error,setError,onSuccess}){
     if(existing&&existing.email===normalized){setBusy(false);return setError("An account already exists on this device. Sign in instead.");}
     const next={name:name.trim()||normalized.split("@")[0],email:normalized};localStorage.setItem("journey_account",JSON.stringify({...next,passwordHash:hash}));onSuccess(next);
   };
-  return <div className="auth-page"><div className="auth-glow glow-a"/><div className="auth-glow glow-b"/><div className="auth-card">
+  return <div className="auth-page"><div className="auth-glow glow-a"/><div className="auth-glow glow-b"/>
+    <section className="auth-showcase">
+      <div className="showcase-topline"><span className="showcase-spark">✦</span><span>THE JOURNEY</span><span className="showcase-topline-rule"/></div>
+      <div className="showcase-copy">
+        <span className="eyebrow">A QUIET PLACE TO GROW</span>
+        <h1>Make room for <em>what matters most.</em></h1>
+        <p>Return to Scripture. Make space for prayer. Build a faith rhythm that meets you in real life.</p>
+        <div className="showcase-confession"><span className="confession-cross">✝</span><div><strong>Jesus Christ is King and Lord.</strong><span>Let every day begin with truth, grace, and hope.</span></div></div>
+      </div>
+      <div className="showcase-verse-card">
+        <div className="showcase-verse-top"><span>WORDS TO CARRY WITH YOU</span><span className="showcase-verse-mark">✦</span></div>
+        <blockquote>“Be still, and know that I am God.”</blockquote>
+        <div className="showcase-verse-bottom"><span>PSALM 46:10</span><span className="verse-line"/></div>
+      </div>
+      <div className="showcase-footer"><span><i/> Scripture</span><span><i/> Prayer</span><span><i/> Growth</span><span className="showcase-free">Always free</span></div>
+      <div className="showcase-orbit orbit-one"/><div className="showcase-orbit orbit-two"/><div className="showcase-glow"/>
+    </section>
+    <div className="auth-card">
     <div className="auth-brand"><div className="brand-mark large">✝</div><div><div className="brand-name">The Journey</div><div className="brand-tag">Grow in faith. Grow in Scripture.</div></div></div>
     <div className="auth-heading">{mode==="login"?"Welcome back.":"Begin your journey."}</div><p className="auth-sub">{mode==="login"?"Pick up where you left off.":"A completely free space for Scripture, prayer, learning, and growth."}</p>
     <form onSubmit={submit} className="auth-form">{mode==="register"&&<label>Name<input value={name} onChange={e=>setName(e.target.value)} placeholder="Your name"/></label>}<label>Email<input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/></label><label>Password<div className="password-wrap"><input type={showPassword?"text":"password"} value={password} onChange={e=>setPassword(e.target.value)} placeholder="At least 6 characters"/><button type="button" onClick={()=>setShowPassword(v=>!v)}>{showPassword?"Hide":"Show"}</button></div></label>{error&&<div className="form-error">{error}</div>}<button disabled={busy} className="primary-btn wide">{busy?"Opening…":mode==="login"?"Enter The Journey":"Create Free Account"} <span>→</span></button></form>
@@ -642,7 +658,7 @@ function NotificationPanel({notifications,setNotifications}){
 function HomeView({user,verse,saved,onSave,go,completed,stats,onNeedHelp,notify}){
   const tasks=[["verse","Read your personalized verse","Scripture for what you're facing"],["reading","Continue your reading plan","Choose a plan and keep a steady rhythm"],["prayer","Write today's prayer","Talk with God for a few quiet minutes"],["game","Take the Bible challenge","Five questions • build your Bible knowledge"],["reflection","Daily check-in","Name how you're doing and what you need"],["gratitude","Practice gratitude","Record one gift from today"]];
   return <div className="page page-home">
-    <section className="hero"><div><div className="eyebrow">GOOD MORNING, {user.name?.split(" ")[0]?.toUpperCase()||"FRIEND"}</div><h1>Walk with God.<br/><em>One day at a time.</em></h1><p>Scripture, prayer, learning, community, and growth—built around your current season.</p><div className="hero-actions"><button className="primary-btn" onClick={()=>document.getElementById("daily-verse")?.scrollIntoView({behavior:"smooth"})}>Open today's verse <span>↓</span></button><button className="ghost-btn" onClick={()=>go("growth")}>Check in today</button></div></div><div className="hero-art"><div className="hero-orb"/><div className="hero-cross">✝</div><div className="hero-ring r1"/><div className="hero-ring r2"/></div></section>
+    <section className="hero"><div><div className="hero-intro"><span className="hero-intro-mark">✦</span> A LITTLE SPACE TO DRAW NEAR TO GOD</div><div className="eyebrow">GOOD MORNING, {user.name?.split(" ")[0]?.toUpperCase()||"FRIEND"}</div><h1>Walk with God.<br/><em>One day at a time.</em></h1><p>Come as you are. Find Scripture for today, make room for prayer, and keep growing in the grace of Jesus.</p><div className="hero-actions"><button className="primary-btn" onClick={()=>document.getElementById("daily-verse")?.scrollIntoView({behavior:"smooth"})}>Spend a moment in Scripture <span>↘</span></button><button className="ghost-btn" onClick={()=>go("growth")}>Check in today <span>→</span></button></div></div><div className="hero-art"><div className="hero-orb"/><div className="hero-cross">✝</div><div className="hero-ring r1"/><div className="hero-ring r2"/><div className="hero-verse-float"><div className="hero-verse-label"><span/> A MOMENT OF STILLNESS</div><blockquote>“Be still, and know that I am God.”</blockquote><small>PSALM 46:10</small></div></div></section>
     <section className="stats-row"><Stat label="Journey streak" value={stats.streak+" days"} icon="✦"/><Stat label="Scripture read" value={stats.chapters+" chapters"} icon="📖"/><Stat label="Prayers" value={stats.prayers+" saved"} icon="🙏"/><Stat label="Bible XP" value={stats.xp.toLocaleString()} icon="✧"/></section>
     <section className="section-grid" id="daily-verse"><div className="verse-card"><div className="card-head"><div><span className="eyebrow">YOUR DAILY VERSE</span><h2>For what you're facing</h2></div><span className="day-pill">TODAY</span></div><blockquote>“{verse.text}”</blockquote><div className="verse-footer"><div><strong>{verse.ref}</strong><span>KJV</span></div><div className="row-actions"><button className={"small-btn "+(saved?"saved":"")} onClick={onSave}>{saved?"♥ Saved":"♡ Save"}</button><button className="small-btn" onClick={()=>notify("Share ready","Your verse can be shared with your preferred app.")}>↗ Share</button></div></div><div className="reflection"><span className="reflection-icon">✦</span><div><strong>A thought for today</strong><p>Read it slowly. Ask what the passage invites you to trust, practice, or remember.</p></div></div></div>
       <div className="today-card"><div className="card-head"><div><span className="eyebrow">TODAY'S PATH</span><h2>Keep moving</h2></div><span className="path-badge">{Math.round(Object.values(completed).filter(Boolean).length/Object.keys(completed).length*100)}%</span></div>{tasks.map(([key,title,sub])=><button className="task-row" key={key} onClick={()=>go(key==="verse"?"bible":key==="reading"?"plans":key==="prayer"?"prayer":key==="game"?"games":"growth")}><span className={"task-check "+(completed[key]?"done":"")}>{completed[key]?"✓":"○"}</span><span><strong>{title}</strong><small>{sub}</small></span><span className="task-arrow">→</span></button>)}</div></section>
