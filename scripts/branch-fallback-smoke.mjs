@@ -40,17 +40,28 @@ const server = http.createServer(async (req, res) => {
 
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-const assertColorContrast = async (page, label) => {
-  const failures = await page.evaluate(async () => {
-    const report = await axe.run(document, { runOnly: { type: "rule", values: ["color-contrast"] } });
-    return report.violations.flatMap(violation => violation.nodes.map(node => ({
+const assertWcagAA = async (page, label) => {
+  const violations = await page.evaluate(async () => {
+    const report = await axe.run(document, {
+      runOnly: {
+        type: "tag",
+        values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]
+      }
+    });
+    return report.violations.map(violation => ({
       rule: violation.id,
-      target: node.target,
-      summary: node.failureSummary
-    })));
+      impact: violation.impact,
+      help: violation.help,
+      nodes: violation.nodes.map(node => ({
+        target: node.target,
+        summary: node.failureSummary
+      }))
+    }));
   });
-  if (failures.length) throw new Error("WCAG color-contrast failures on " + label + ":\\n" + JSON.stringify(failures, null, 2));
-  console.log("Color contrast passed:", label);
+  if (violations.length) {
+    throw new Error("WCAG A/AA accessibility failures on " + label + ":\\n" + JSON.stringify(violations, null, 2));
+  }
+  console.log("WCAG A/AA audit passed:", label);
 };
 
 
@@ -79,7 +90,7 @@ try {
 
   await page.waitForTimeout(2600);
   await page.addScriptTag({ path: resolve("node_modules/axe-core/axe.min.js") });
-  await assertColorContrast(page, "static fallback dashboard");
+  await assertWcagAA(page, "static fallback dashboard");
 
   const bodyText = await page.locator("body").innerText();
   const rootText = await page.locator("#root").innerText();
@@ -106,7 +117,7 @@ try {
   await authPage.waitForTimeout(2600);
   await authPage.setViewportSize({ width: 390, height: 844 });
   await authPage.addScriptTag({ path: resolve("node_modules/axe-core/axe.min.js") });
-  await assertColorContrast(authPage, "static fallback mobile welcome");
+  await assertWcagAA(authPage, "static fallback mobile welcome");
   const authText = await authPage.locator("body").innerText();
   if (!authText.includes("Make room for") || !authText.includes("Jesus Christ is King and Lord.")) {
     throw new Error("Redesigned fallback welcome screen is missing expected content. Visible text:\\n" + authText.slice(0, 1600));
