@@ -1,6 +1,7 @@
 import http from "node:http";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { resolve } from "node:path";
 import { chromium } from "playwright";
 
 const root = process.cwd();
@@ -38,6 +39,21 @@ const server = http.createServer(async (req, res) => {
 });
 
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+const assertColorContrast = async (page, label) => {
+  const failures = await page.evaluate(async () => {
+    const report = await axe.run(document, { runOnly: { type: "rule", values: ["color-contrast"] } });
+    return report.violations.flatMap(violation => violation.nodes.map(node => ({
+      rule: violation.id,
+      target: node.target,
+      summary: node.failureSummary
+    })));
+  });
+  if (failures.length) throw new Error("WCAG color-contrast failures on " + label + ":\\n" + JSON.stringify(failures, null, 2));
+  console.log("Color contrast passed:", label);
+};
+
+
 let browser;
 
 try {
@@ -62,6 +78,8 @@ try {
   if (!response?.ok()) throw new Error("Fallback page returned HTTP " + response?.status());
 
   await page.waitForTimeout(2600);
+  await page.addScriptTag({ path: resolve("node_modules/axe-core/axe.min.js") });
+  await assertColorContrast(page, "static fallback dashboard");
 
   const bodyText = await page.locator("body").innerText();
   const rootText = await page.locator("#root").innerText();
@@ -87,6 +105,8 @@ try {
   if (!authResponse?.ok()) throw new Error("Logged-out fallback returned HTTP " + authResponse?.status());
   await authPage.waitForTimeout(2600);
   await authPage.setViewportSize({ width: 390, height: 844 });
+  await authPage.addScriptTag({ path: resolve("node_modules/axe-core/axe.min.js") });
+  await assertColorContrast(authPage, "static fallback mobile welcome");
   const authText = await authPage.locator("body").innerText();
   if (!authText.includes("Make room for") || !authText.includes("Jesus Christ is King and Lord.")) {
     throw new Error("Redesigned fallback welcome screen is missing expected content. Visible text:\\n" + authText.slice(0, 1600));
